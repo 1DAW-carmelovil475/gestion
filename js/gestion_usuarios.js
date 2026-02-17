@@ -240,7 +240,7 @@ function renderCompanies() {
     
     table.innerHTML = paginated.map(c => `
         <tr>
-            <td><strong>${c.name}</strong></td>
+            <td onclick="viewCompany(${c.id})"><strong>${c.name}</strong></td>
             <td>${c.cif}</td>
             <td>${c.email}</td>
             <td>${c.phone}</td>
