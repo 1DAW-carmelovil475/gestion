@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./css/gestion_usuarios.css">
     <link rel="stylesheet" href="./css/gestion_it.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -17,6 +17,7 @@
         <span class="logo-text">Hola Informática</span>
     </div>
 
+    <!-- FIX: clase correcta es top-nav, no top-nav-desktop -->
     <nav class="top-nav">
         <a href="#empresas" class="nav-link active" data-section="empresas">
             <i class="fas fa-building"></i> Empresas
@@ -35,7 +36,7 @@
     <div class="user-area">
         <div class="user-info">
             <i class="fas fa-user-circle"></i>
-            <span>Administrador</span>
+            <span id="usuarioNombre">Administrador</span>
         </div>
         <button id="logoutBtn" class="btn-logout">
             <i class="fas fa-sign-out-alt"></i> Cerrar sesión
@@ -47,7 +48,6 @@
 
 <!-- SECTION: EMPRESAS -->
 <section id="empresas" class="content-section active">
-
     <div class="section-header">
         <div>
             <h1><i class="fas fa-building"></i> Empresas Cliente</h1>
@@ -63,32 +63,19 @@
         </div>
     </div>
 
-    <!-- Estadísticas -->
     <div class="stats">
         <div class="stat-card">
-            <div class="stat-icon" style="background: #dbeafe; color: #2563eb;">
-                <i class="fas fa-building"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="totalEmpresas">0</h3>
-                <p>Total Empresas</p>
-            </div>
+            <div class="stat-icon" style="background:#dbeafe;color:#2563eb"><i class="fas fa-building"></i></div>
+            <div class="stat-info"><h3 id="totalEmpresas">0</h3><p>Total Empresas</p></div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon" style="background: #dcfce7; color: #16a34a;">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="empresasActivas">0</h3>
-                <p>Contratos Activos</p>
-            </div>
+            <div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-info"><h3 id="empresasActivas">0</h3><p>Contratos Activos</p></div>
         </div>
     </div>
 
-    <!-- Alertas de contratos próximos a vencer -->
     <div class="alerts-container" id="alertsContainer"></div>
 
-    <!-- Filtros -->
     <div class="filters">
         <div class="search-box">
             <i class="fas fa-search"></i>
@@ -110,27 +97,18 @@
         </select>
     </div>
 
-    <!-- Tabla -->
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>Empresa</th>
-                    <th>CIF</th>
-                    <th>Email</th>
-                    <th>Teléfono</th>
-                    <th>Servicios</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
+                    <th>Empresa</th><th>CIF</th><th>Email</th><th>Teléfono</th>
+                    <th>Servicios</th><th>Estado</th><th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="companyTable"></tbody>
         </table>
     </div>
-
-    <!-- Paginación -->
     <div class="pagination" id="pagination"></div>
-
 </section>
 
 <!-- SECTION: CONTRATOS -->
@@ -144,57 +122,30 @@
             <i class="fas fa-plus"></i> Nuevo Contrato
         </button>
     </div>
-
     <div class="stats">
         <div class="stat-card">
-            <div class="stat-icon" style="background: #dbeafe; color: #2563eb;">
-                <i class="fas fa-file-signature"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="totalContratos">0</h3>
-                <p>Total Contratos</p>
-            </div>
+            <div class="stat-icon" style="background:#dbeafe;color:#2563eb"><i class="fas fa-file-signature"></i></div>
+            <div class="stat-info"><h3 id="totalContratos">0</h3><p>Total Contratos</p></div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon" style="background: #dcfce7; color: #16a34a;">
-                <i class="fas fa-check"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="contratosActivos">0</h3>
-                <p>Activos</p>
-            </div>
+            <div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="fas fa-check"></i></div>
+            <div class="stat-info"><h3 id="contratosActivos">0</h3><p>Activos</p></div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="contratosPorVencer">0</h3>
-                <p>Por Vencer (30 días)</p>
-            </div>
+            <div class="stat-icon" style="background:#fee2e2;color:#dc2626"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="stat-info"><h3 id="contratosPorVencer">0</h3><p>Por Vencer (30 días)</p></div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon" style="background: #f3e8ff; color: #9333ea;">
-                <i class="fas fa-euro-sign"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="facturacionTotal">0€</h3>
-                <p>Valor Total</p>
-            </div>
+            <div class="stat-icon" style="background:#f3e8ff;color:#9333ea"><i class="fas fa-euro-sign"></i></div>
+            <div class="stat-info"><h3 id="facturacionTotal">0€</h3><p>Valor Total</p></div>
         </div>
     </div>
-
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>Empresa</th>
-                    <th>Tipo de Contrato</th>
-                    <th>Fecha Inicio</th>
-                    <th>Fecha Fin</th>
-                    <th>Valor Anual</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
+                    <th>Empresa</th><th>Tipo de Contrato</th><th>Fecha Inicio</th>
+                    <th>Fecha Fin</th><th>Valor Anual</th><th>Estado</th><th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="contractsTable"></tbody>
@@ -213,56 +164,30 @@
             <i class="fas fa-plus"></i> Nueva Factura
         </button>
     </div>
-
     <div class="stats">
         <div class="stat-card">
-            <div class="stat-icon" style="background: #dbeafe; color: #2563eb;">
-                <i class="fas fa-file-invoice"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="totalFacturas">0</h3>
-                <p>Total Facturas</p>
-            </div>
+            <div class="stat-icon" style="background:#dbeafe;color:#2563eb"><i class="fas fa-file-invoice"></i></div>
+            <div class="stat-info"><h3 id="totalFacturas">0</h3><p>Total Facturas</p></div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon" style="background: #dcfce7; color: #16a34a;">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="facturasPagadas">0</h3>
-                <p>Pagadas</p>
-            </div>
+            <div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-info"><h3 id="facturasPagadas">0</h3><p>Pagadas</p></div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">
-                <i class="fas fa-times-circle"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="facturasPendientes">0</h3>
-                <p>Pendientes</p>
-            </div>
+            <div class="stat-icon" style="background:#fee2e2;color:#dc2626"><i class="fas fa-times-circle"></i></div>
+            <div class="stat-info"><h3 id="facturasPendientes">0</h3><p>Pendientes</p></div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
-                <i class="fas fa-exclamation-circle"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="facturasVencidas">0</h3>
-                <p>Vencidas</p>
-            </div>
+            <div class="stat-icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-exclamation-circle"></i></div>
+            <div class="stat-info"><h3 id="facturasVencidas">0</h3><p>Vencidas</p></div>
         </div>
     </div>
-
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>Nº Factura</th>
-                    <th>Empresa</th>
-                    <th>Fecha</th>
-                    <th>Importe</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
+                    <th>Nº Factura</th><th>Empresa</th><th>Fecha</th>
+                    <th>Importe</th><th>Estado</th><th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="invoicesTable"></tbody>
@@ -270,7 +195,7 @@
     </div>
 </section>
 
-<!-- SECTION: TICKETS/SOPORTE -->
+<!-- SECTION: TICKETS -->
 <section id="soporte" class="content-section">
     <div class="section-header">
         <div>
@@ -281,57 +206,30 @@
             <i class="fas fa-plus"></i> Nuevo Ticket
         </button>
     </div>
-
     <div class="stats">
         <div class="stat-card">
-            <div class="stat-icon" style="background: #dbeafe; color: #2563eb;">
-                <i class="fas fa-ticket-alt"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="totalTickets">0</h3>
-                <p>Total Tickets</p>
-            </div>
+            <div class="stat-icon" style="background:#dbeafe;color:#2563eb"><i class="fas fa-ticket-alt"></i></div>
+            <div class="stat-info"><h3 id="totalTickets">0</h3><p>Total Tickets</p></div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
-                <i class="fas fa-spinner"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="ticketsAbiertos">0</h3>
-                <p>Abiertos</p>
-            </div>
+            <div class="stat-icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-spinner"></i></div>
+            <div class="stat-info"><h3 id="ticketsAbiertos">0</h3><p>Abiertos</p></div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon" style="background: #dcfce7; color: #16a34a;">
-                <i class="fas fa-check"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="ticketsCerrados">0</h3>
-                <p>Cerrados</p>
-            </div>
+            <div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="fas fa-check"></i></div>
+            <div class="stat-info"><h3 id="ticketsCerrados">0</h3><p>Cerrados</p></div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">
-                <i class="fas fa-exclamation-circle"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="ticketsUrgentes">0</h3>
-                <p>Urgentes</p>
-            </div>
+            <div class="stat-icon" style="background:#fee2e2;color:#dc2626"><i class="fas fa-exclamation-circle"></i></div>
+            <div class="stat-info"><h3 id="ticketsUrgentes">0</h3><p>Urgentes</p></div>
         </div>
     </div>
-
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Empresa</th>
-                    <th>Asunto</th>
-                    <th>Prioridad</th>
-                    <th>Estado</th>
-                    <th>Fecha</th>
-                    <th>Acciones</th>
+                    <th>ID</th><th>Empresa</th><th>Asunto</th>
+                    <th>Prioridad</th><th>Estado</th><th>Fecha</th><th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="ticketsTable"></tbody>
@@ -341,14 +239,12 @@
 
 </main>
 
-<!-- MODAL: AGREGAR/EDITAR EMPRESA -->
+<!-- MODAL: EMPRESA -->
 <div class="modal" id="companyModal">
     <div class="modal-content modal-large">
         <div class="modal-header">
             <h2 id="companyModalTitle">Nueva Empresa</h2>
-            <button class="modal-close" onclick="closeCompanyModal()">
-                <i class="fas fa-times"></i>
-            </button>
+            <button class="modal-close" onclick="closeCompanyModal()"><i class="fas fa-times"></i></button>
         </div>
         <form id="companyForm">
             <input type="hidden" id="editCompanyIndex">
@@ -357,7 +253,6 @@
                 <button type="button" class="form-tab" data-tab="servicios">Servicios</button>
                 <button type="button" class="form-tab" data-tab="contactos">Contactos</button>
             </div>
-            
             <div class="form-tab-content active" id="tab-datos">
                 <div class="form-row">
                     <div class="form-group">
@@ -398,7 +293,6 @@
                     <textarea id="newNotes" placeholder="Observaciones adicionales..."></textarea>
                 </div>
             </div>
-            
             <div class="form-tab-content" id="tab-servicios">
                 <div class="services-grid">
                     <label class="service-checkbox">
@@ -433,7 +327,6 @@
                     </label>
                 </div>
             </div>
-            
             <div class="form-tab-content" id="tab-contactos">
                 <div id="contactsContainer">
                     <div class="contact-row">
@@ -460,75 +353,48 @@
     </div>
 </div>
 
-<!-- MODAL: VER DETALLE DE EMPRESA -->
+<!-- MODAL: DETALLE EMPRESA -->
 <div class="modal" id="companyDetailModal">
     <div class="modal-content modal-large">
         <div class="modal-header">
             <h2 id="detailCompanyName">Detalle de Empresa</h2>
-            <button class="modal-close" onclick="closeDetailModal()">
-                <i class="fas fa-times"></i>
-            </button>
+            <button class="modal-close" onclick="closeDetailModal()"><i class="fas fa-times"></i></button>
         </div>
         <div class="company-detail">
             <div class="detail-section">
                 <h3><i class="fas fa-building"></i> Datos de la Empresa</h3>
                 <div class="detail-grid">
-                    <div class="detail-item">
-                        <label>CIF:</label>
-                        <span id="detailCif"></span>
-                    </div>
-                    <div class="detail-item">
-                        <label>Email:</label>
-                        <span id="detailEmail"></span>
-                    </div>
-                    <div class="detail-item">
-                        <label>Teléfono:</label>
-                        <span id="detailPhone"></span>
-                    </div>
-                    <div class="detail-item">
-                        <label>Dirección:</label>
-                        <span id="detailAddress"></span>
-                    </div>
-                    <div class="detail-item">
-                        <label>Estado:</label>
-                        <span id="detailStatus" class="status"></span>
-                    </div>
+                    <div class="detail-item"><label>CIF:</label><span id="detailCif"></span></div>
+                    <div class="detail-item"><label>Email:</label><span id="detailEmail"></span></div>
+                    <div class="detail-item"><label>Teléfono:</label><span id="detailPhone"></span></div>
+                    <div class="detail-item"><label>Dirección:</label><span id="detailAddress"></span></div>
+                    <div class="detail-item"><label>Estado:</label><span id="detailStatus" class="status"></span></div>
                 </div>
             </div>
-            
             <div class="detail-section">
                 <h3><i class="fas fa-cogs"></i> Servicios Activos</h3>
                 <div class="detail-services" id="detailServices"></div>
             </div>
-            
             <div class="detail-section">
                 <h3><i class="fas fa-users"></i> Contactos</h3>
                 <div class="detail-contacts" id="detailContacts"></div>
             </div>
-            
             <div class="detail-section">
                 <h3><i class="fas fa-file-contract"></i> Contratos</h3>
                 <div class="detail-contracts" id="detailContracts"></div>
-            </div>
-            
-            <div class="detail-section">
-                <h3><i class="fas fa-history"></i> Actividad Reciente</h3>
-                <div class="detail-activity" id="detailActivity"></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODAL: AGREGAR CONTRATO -->
+<!-- MODAL: CONTRATO -->
 <div class="modal" id="contractModal">
     <div class="modal-content">
         <div class="modal-header">
             <h2>Nuevo Contrato</h2>
-            <button class="modal-close" onclick="closeContractModal()">
-                <i class="fas fa-times"></i>
-            </button>
+            <button class="modal-close" onclick="closeContractModal()"><i class="fas fa-times"></i></button>
         </div>
-        <form id="contractForm">
+        <div class="modal-body">
             <div class="form-group">
                 <label>Empresa *</label>
                 <select id="contractCompany" required></select>
@@ -561,26 +427,22 @@
                 <label>Notas</label>
                 <textarea id="contractNotes" placeholder="Observaciones..."></textarea>
             </div>
-        </form>
+        </div>
         <div class="modal-buttons">
-            <button class="btn-primary" onclick="saveContract()">
-                <i class="fas fa-save"></i> Guardar
-            </button>
+            <button class="btn-primary" onclick="saveContract()"><i class="fas fa-save"></i> Guardar</button>
             <button class="btn-secondary" onclick="closeContractModal()">Cancelar</button>
         </div>
     </div>
 </div>
 
-<!-- MODAL: AGREGAR FACTURA -->
+<!-- MODAL: FACTURA -->
 <div class="modal" id="invoiceModal">
     <div class="modal-content">
         <div class="modal-header">
             <h2>Nueva Factura</h2>
-            <button class="modal-close" onclick="closeInvoiceModal()">
-                <i class="fas fa-times"></i>
-            </button>
+            <button class="modal-close" onclick="closeInvoiceModal()"><i class="fas fa-times"></i></button>
         </div>
-        <form id="invoiceForm">
+        <div class="modal-body">
             <div class="form-group">
                 <label>Número de Factura *</label>
                 <input type="text" id="invoiceNumber" placeholder="Ej: FAC-2024-001" required>
@@ -611,26 +473,22 @@
                     <option value="Vencida">Vencida</option>
                 </select>
             </div>
-        </form>
+        </div>
         <div class="modal-buttons">
-            <button class="btn-primary" onclick="saveInvoice()">
-                <i class="fas fa-save"></i> Guardar
-            </button>
+            <button class="btn-primary" onclick="saveInvoice()"><i class="fas fa-save"></i> Guardar</button>
             <button class="btn-secondary" onclick="closeInvoiceModal()">Cancelar</button>
         </div>
     </div>
 </div>
 
-<!-- MODAL: AGREGAR TICKET -->
+<!-- MODAL: TICKET -->
 <div class="modal" id="ticketModal">
     <div class="modal-content">
         <div class="modal-header">
             <h2>Nuevo Ticket de Soporte</h2>
-            <button class="modal-close" onclick="closeTicketModal()">
-                <i class="fas fa-times"></i>
-            </button>
+            <button class="modal-close" onclick="closeTicketModal()"><i class="fas fa-times"></i></button>
         </div>
-        <form id="ticketForm">
+        <div class="modal-body">
             <div class="form-group">
                 <label>Empresa *</label>
                 <select id="ticketCompany" required></select>
@@ -662,68 +520,46 @@
                     </select>
                 </div>
             </div>
-        </form>
+        </div>
         <div class="modal-buttons">
-            <button class="btn-primary" onclick="saveTicket()">
-                <i class="fas fa-save"></i> Guardar
-            </button>
+            <button class="btn-primary" onclick="saveTicket()"><i class="fas fa-save"></i> Guardar</button>
             <button class="btn-secondary" onclick="closeTicketModal()">Cancelar</button>
         </div>
     </div>
 </div>
-
-<!-- ESTOS MODALES DEBEN AÑADIRSE ANTES DE LAS TOAST NOTIFICATIONS EN EL HTML PRINCIPAL -->
 
 <!-- MODAL: INFRAESTRUCTURA IT -->
 <div class="modal" id="itInfraModal">
     <div class="modal-content modal-large">
         <div class="modal-header">
             <h2 id="itModalCompanyName">Infraestructura IT</h2>
-            <button class="modal-close" onclick="closeITModal()">
-                <i class="fas fa-times"></i>
-            </button>
+            <button class="modal-close" onclick="closeITModal()"><i class="fas fa-times"></i></button>
         </div>
-        
-        <!-- Pestañas IT -->
         <div class="it-tabs">
-            <button class="it-tab active" data-tab="equipos">
-                <i class="fas fa-desktop"></i> Equipos
-            </button>
-            <button class="it-tab" data-tab="servidores">
-                <i class="fas fa-server"></i> Servidores
-            </button>
-            <button class="it-tab" data-tab="nas">
-                <i class="fas fa-hdd"></i> NAS
-            </button>
-            <button class="it-tab" data-tab="redes">
-                <i class="fas fa-network-wired"></i> Redes
-            </button>
-            <button class="it-tab" data-tab="licencias">
-                <i class="fas fa-key"></i> Licencias
-            </button>
+            <button class="it-tab active" data-tab="equipos"><i class="fas fa-desktop"></i> Equipos</button>
+            <button class="it-tab" data-tab="servidores"><i class="fas fa-server"></i> Servidores</button>
+            <button class="it-tab" data-tab="nas"><i class="fas fa-hdd"></i> NAS</button>
+            <button class="it-tab" data-tab="redes"><i class="fas fa-network-wired"></i> Redes</button>
+            <button class="it-tab" data-tab="licencias"><i class="fas fa-key"></i> Licencias</button>
         </div>
-        
-        <!-- Contenido dinámico -->
-        <div id="itContent">
-            <!-- El contenido se carga dinámicamente según la pestaña activa -->
-        </div>
+        <div id="itContent"></div>
     </div>
 </div>
 
-<!-- MODAL: AÑADIR ITEM IT (Reutilizable para todos los tipos) -->
+<!-- MODAL: AÑADIR ITEM IT -->
+<!-- FIX: añadido onclick en el botón guardar -->
 <div class="modal" id="itItemModal">
     <div class="modal-content">
         <div class="modal-header">
             <h2 id="itItemModalTitle">Añadir Item</h2>
-            <button class="modal-close" onclick="closeITItemModal()">
-                <i class="fas fa-times"></i>
-            </button>
+            <button class="modal-close" onclick="closeITItemModal()"><i class="fas fa-times"></i></button>
         </div>
-        <form id="itItemForm" onsubmit="return false;">
-            <!-- El formulario se carga dinámicamente según el tipo de item -->
-        </form>
+        <div class="modal-body">
+            <form id="itItemForm" onsubmit="return false;"></form>
+        </div>
         <div class="modal-buttons">
-            <button class="btn-primary" id="saveITItemBtn">
+            <!-- FIX: onclick añadido -->
+            <button class="btn-primary" id="saveITItemBtn" onclick="saveITItem()">
                 <i class="fas fa-save"></i> Guardar
             </button>
             <button class="btn-secondary" onclick="closeITItemModal()">Cancelar</button>
@@ -731,10 +567,32 @@
     </div>
 </div>
 
-
-<!-- TOAST NOTIFICATIONS -->
+<!-- TOAST -->
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- FIX: config.js cargado antes que el script principal -->
+<script src="./js/config.js"></script>
+<script>
+(function() {
+    if (!sessionStorage.getItem('hola_token')) {
+        window.location.replace('./index.html');
+    }
+    const usuario = sessionStorage.getItem('hola_usuario');
+    if (usuario) {
+        const el = document.getElementById('usuarioNombre');
+        if (el) el.textContent = usuario;
+    }
+})();
+
+document.getElementById('logoutBtn').addEventListener('click', function() {
+    if (confirm('¿Cerrar sesión?')) {
+        sessionStorage.removeItem('hola_token');
+        sessionStorage.removeItem('hola_usuario');
+        window.location.href = './index.html';
+    }
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="./js/gestion_usuarios.js"></script>
 </body>
 </html>

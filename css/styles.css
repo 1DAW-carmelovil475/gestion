@@ -8,11 +8,7 @@
     --shadow: rgba(0, 102, 255, 0.15);
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     font-family: 'Outfit', sans-serif;
@@ -29,22 +25,18 @@ body {
 body::before {
     content: '';
     position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+    top: -50%; right: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(0,212,255,0.1) 0%, transparent 70%);
     animation: pulse 15s ease-in-out infinite;
 }
 
 body::after {
     content: '';
     position: absolute;
-    bottom: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(77, 148, 255, 0.08) 0%, transparent 70%);
+    bottom: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(77,148,255,0.08) 0%, transparent 70%);
     animation: pulse 20s ease-in-out infinite reverse;
 }
 
@@ -55,44 +47,35 @@ body::after {
 
 .grid-pattern {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: 
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
     background-size: 50px 50px;
     pointer-events: none;
 }
 
-/* CONTENEDOR */
+/* ---- Contenedor login ---- */
 .login-container {
     position: relative;
     z-index: 10;
     background: var(--white);
     border-radius: 24px;
-    box-shadow: 
-        0 40px 80px rgba(0, 0, 0, 0.3),
-        0 20px 40px rgba(0, 102, 255, 0.2);
+    box-shadow:
+        0 40px 80px rgba(0,0,0,0.3),
+        0 20px 40px rgba(0,102,255,0.2);
     padding: 60px 50px;
     width: 90%;
     max-width: 450px;
-    animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: slideIn 0.6s cubic-bezier(0.16,1,0.3,1);
 }
 
 @keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(30px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* LOGO */
+/* ---- Logo ---- */
 .logo-section {
     text-align: center;
     margin-bottom: 40px;
@@ -102,7 +85,7 @@ body::after {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .logo-img {
@@ -116,10 +99,8 @@ body::after {
     color: #64748b;
 }
 
-/* FORMULARIO */
-.form-group {
-    margin-bottom: 24px;
-}
+/* ---- Formulario ---- */
+.form-group { margin-bottom: 22px; }
 
 label {
     display: block;
@@ -131,23 +112,58 @@ label {
 
 input {
     width: 100%;
-    padding: 16px 20px;
+    padding: 15px 18px;
     border: 2px solid #e2e8f0;
     border-radius: 12px;
     font-size: 15px;
     font-family: 'Outfit', sans-serif;
     transition: all 0.3s ease;
     background: var(--off-white);
+    color: #1e293b;
 }
 
 input:focus {
     outline: none;
     border-color: var(--primary-blue);
     background: var(--white);
-    box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 0 0 4px rgba(0,102,255,0.1);
+    transform: translateY(-1px);
 }
 
+/* FIX: Wrapper del input de contraseña con botón toggle */
+.input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrap input {
+    padding-right: 50px;
+}
+
+/* FIX: Botón toggle contraseña estilado */
+.toggle-pwd {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.toggle-pwd:hover { color: var(--primary-blue); }
+
+/* ---- Botón login ---- */
 .login-button {
     width: 100%;
     padding: 16px;
@@ -161,14 +177,22 @@ input:focus {
     transition: all 0.3s ease;
     margin-top: 8px;
     box-shadow: 0 8px 16px var(--shadow);
+    font-family: 'Outfit', sans-serif;
 }
 
 .login-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(0, 102, 255, 0.25);
+    box-shadow: 0 12px 24px rgba(0,102,255,0.3);
     background: var(--deep-blue);
 }
 
+.login-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ---- Footer ---- */
 .footer-text {
     text-align: center;
     margin-top: 32px;
@@ -182,39 +206,35 @@ input:focus {
     font-weight: 600;
 }
 
-.footer-text a:hover {
-    color: var(--deep-blue);
-}
+.footer-text a:hover { color: var(--deep-blue); }
 
-/* MENSAJES */
+/* ---- Mensajes ---- */
 .error-message {
-    background: #fee;
+    background: #fff0f0;
     border: 1px solid #fcc;
     color: #c33;
     padding: 12px 16px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
     margin-bottom: 20px;
     display: none;
+    align-items: center;
+    gap: 8px;
 }
 
 .success-message {
-    background: #efe;
+    background: #f0fff4;
     border: 1px solid #cfc;
     color: #3c3;
     padding: 12px 16px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
     margin-bottom: 20px;
     display: none;
 }
 
+/* ---- Responsive ---- */
 @media (max-width: 480px) {
-    .login-container {
-        padding: 40px 30px;
-    }
-
-    .logo-img {
-        max-width: 140px;
-    }
+    .login-container { padding: 40px 28px; }
+    .logo-img { max-width: 140px; }
 }

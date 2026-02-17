@@ -1,74 +1,72 @@
 /* ============================================
-   ESTILOS ADICIONALES PARA INFRAESTRUCTURA IT
+   INFRAESTRUCTURA IT
    ============================================ */
 
-/* Modal de Infraestructura IT */
+/* Modal principal IT — ancho extendido */
 #itInfraModal .modal-content {
-    max-width: 1200px;
+    max-width: 1100px;
     max-height: 90vh;
 }
 
-/* Pestañas IT */
+/* ---- Pestañas IT ---- */
 .it-tabs {
     display: flex;
-    gap: 5px;
+    gap: 2px;
     border-bottom: 2px solid #e2e8f0;
-    margin: 20px 24px 0;
+    margin: 0 24px;
     overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-top: 4px;
 }
 
+.it-tabs::-webkit-scrollbar { display: none; }
+
 .it-tab {
-    padding: 12px 20px;
+    padding: 12px 18px;
     background: none;
     border: none;
     cursor: pointer;
     font-weight: 600;
     color: var(--gray);
     font-family: inherit;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     position: relative;
     transition: color 0.3s;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .it-tab::after {
     content: '';
     position: absolute;
     bottom: -2px;
-    left: 0;
-    right: 0;
+    left: 0; right: 0;
     height: 2px;
     background: var(--primary);
     transform: scaleX(0);
     transition: transform 0.3s ease;
 }
 
-.it-tab.active {
-    color: var(--primary);
-}
+.it-tab.active { color: var(--primary); }
+.it-tab.active::after { transform: scaleX(1); }
+.it-tab i { margin-right: 6px; }
 
-.it-tab.active::after {
-    transform: scaleX(1);
-}
-
-.it-tab i {
-    margin-right: 6px;
-}
-
-/* Contenido IT */
+/* ---- Zona de contenido ---- */
 #itContent {
-    padding: 24px;
-    min-height: 400px;
+    padding: 20px 24px 24px;
+    min-height: 350px;
+    overflow-y: auto;
 }
 
-/* Grid de items IT */
+/* ---- Grid de tarjetas ---- */
 .it-items-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
 }
 
-/* Tarjeta de item IT */
+/* ---- Tarjeta individual ---- */
 .it-item-card {
     background: white;
     border: 1px solid #e2e8f0;
@@ -78,13 +76,13 @@
 }
 
 .it-item-card:hover {
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
     transform: translateY(-2px);
 }
 
 .it-item-header {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    padding: 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e8eef5 100%);
+    padding: 14px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -93,96 +91,80 @@
 
 .it-item-header h4 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: var(--dark);
     display: flex;
     align-items: center;
     gap: 8px;
+    font-weight: 600;
 }
 
-.it-item-header i {
-    color: var(--primary);
-}
+.it-item-header > i,
+.it-item-header h4 i { color: var(--primary); }
 
-.it-item-body {
-    padding: 16px;
-}
+.it-item-body { padding: 4px 0; }
 
 .it-item-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #f1f5f9;
+    padding: 9px 16px;
+    border-bottom: 1px solid #f8fafc;
+    gap: 12px;
 }
 
-.it-item-row:last-child {
-    border-bottom: none;
-}
+.it-item-row:last-child { border-bottom: none; }
 
 .it-label {
     font-weight: 600;
     color: var(--gray);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
+    flex-shrink: 0;
+    min-width: 80px;
 }
 
 .it-item-row span:last-child {
     color: var(--dark);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 500;
+    text-align: right;
+    word-break: break-all;
 }
 
-/* Password hidden/visible */
+/* ---- Contraseñas ---- */
 .password-hidden {
     font-family: monospace;
-    font-size: 1.2rem;
-    letter-spacing: 2px;
+    font-size: 1.1rem;
+    letter-spacing: 3px;
     color: var(--gray);
+    user-select: none;
 }
 
 .password-visible {
     font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--dark);
-    background: #f8fafc;
-    padding: 4px 8px;
+    background: #f0fdf4;
+    padding: 3px 8px;
     border-radius: 4px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #bbf7d0;
+    word-break: break-all;
 }
 
-/* Botón de icono (lupa) */
-.btn-icon {
-    background: none;
-    border: none;
-    color: var(--primary);
-    cursor: pointer;
-    padding: 6px 10px;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
-}
-
-.btn-icon:hover {
-    background: #e0f2fe;
-    color: #0369a1;
-}
-
-/* Modal para añadir items IT */
+/* ---- Modal añadir item IT ---- */
 #itItemModal .modal-content {
-    max-width: 600px;
+    max-width: 580px;
 }
 
-/* Responsive */
+/* ============================================
+   RESPONSIVE IT
+   ============================================ */
 @media (max-width: 768px) {
-    .it-items-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .it-tabs {
-        margin: 20px 16px 0;
-    }
-    
-    #itContent {
-        padding: 16px;
-    }
+    #itInfraModal .modal-content { max-width: 100%; }
+
+    .it-items-grid { grid-template-columns: 1fr; }
+
+    .it-tabs { margin: 0 16px; }
+
+    #itContent { padding: 16px; }
 }
