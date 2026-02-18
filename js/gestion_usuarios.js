@@ -1019,7 +1019,7 @@ function buildITContent(items, categoria, icon, fields, label, searchTerm = '') 
             (item.numero_serie || '').toLowerCase().includes(searchTerm.toLowerCase()))
         : items;
 
-    const searchPlaceholder = categoria === 'correos'
+    const searchPlaceholder = categoria === 'correo'
         ? 'Buscar por nombre de cliente o correo...'
         : categoria === 'equipo'
             ? 'Buscar por nombre o número de serie...'
@@ -1061,7 +1061,7 @@ function buildITContent(items, categoria, icon, fields, label, searchTerm = '') 
     let html = searchBar + `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
             <h3 style="font-size:1rem;color:var(--dark);display:flex;align-items:center;gap:8px">
-                <i class="fas ${icon}" style="color:var(--primary)"></i> ${label}s
+                <i class="fas ${icon}" style="color:var(--primary)"></i> ${label}
                 <span style="background:#e0f2fe;color:#0369a1;padding:2px 10px;border-radius:20px;font-size:0.78rem;font-weight:600">${filtered.length}${searchTerm ? ` de ${items.length}` : ''}</span>
             </h3>
             <button class="btn-primary btn-sm" onclick="openAddDispositivoModal('${categoria}')">
@@ -1193,7 +1193,7 @@ function renderOtros(id)      { renderDispositivos(id, 'otro',     'fa-boxes',  
 // AÑADIR DISPOSITIVO
 // ============================================
 function openAddDispositivoModal(categoria) {
-    const labelMap = { equipo:'Equipos', servidor:'Servidores', nas:'NAS', red:'Dispositivos de Red', correo:'Correos', otro:'Elementos' };
+    const labelMap = { equipo:'Equipo', servidor:'Servidor', nas:'NAS', red:'Dispositivo de Red', correo:'Correo', otro:'Elemento' };
     document.getElementById('itItemModalTitle').textContent = `Añadir ${labelMap[categoria] || categoria}`;
     document.getElementById('itItemModal').dataset.categoria = categoria;
     delete document.getElementById('itItemModal').dataset.editId;
@@ -1300,7 +1300,7 @@ async function openEditDispositivoModal(itemId, categoria) {
     const item = allItems.find(i => i.id === itemId);
     if (!item) { showToast('error', 'Error', 'Dispositivo no encontrado'); return; }
 
-    const labelMap = { equipo:'Equipos', servidor:'Servidores', nas:'NAS', red:'Dispositivos de Red', correo:'Correos', otro:'Elementos' };
+    const labelMap = { equipo:'Equipo', servidor:'Servidor', nas:'NAS', red:'Dispositivo de Red', correo:'Correo', otro:'Elemento' };
     document.getElementById('itItemModalTitle').textContent = `Editar ${labelMap[categoria] || categoria}`;
     document.getElementById('itItemModal').dataset.categoria = categoria;
     document.getElementById('itItemModal').dataset.editId = itemId;
