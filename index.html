@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0047b3">
     <title>Hola Informática | Acceso</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./css/styles.css">
 </head>
@@ -19,21 +19,21 @@
             <img src="./img/logoHola.png" alt="Hola Informática" class="logo-img"
                  onerror="this.style.display='none'">
         </div>
-        <p class="subtitle">Panel de Gestión · Acceso Administrador</p>
+        <p class="subtitle">Panel de Gestión · Acceso</p>
     </div>
 
     <div id="errorMessage" class="error-message">
         <i class="fas fa-exclamation-circle"></i>
-        <span id="errorText">Usuario o contraseña incorrectos.</span>
+        <span id="errorText">Email o contraseña incorrectos.</span>
     </div>
 
     <form id="loginForm">
         <div class="form-group">
-            <label for="username">
-                <i class="fas fa-user"></i> Usuario
+            <label for="email">
+                <i class="fas fa-envelope"></i> Email
             </label>
-            <input type="text" id="username" placeholder="administrador"
-                   autocomplete="username" autocapitalize="none" required>
+            <input type="email" id="email" placeholder="tu@email.com"
+                   autocomplete="email" required>
         </div>
         <div class="form-group">
             <label for="password">
@@ -60,39 +60,51 @@
 
 <script src="./js/config.js"></script>
 <script>
-    // Si ya hay token válido, ir directo al panel
-    const saved = sessionStorage.getItem('hola_token');
-    if (saved) window.location.replace('./gestion_usuarios.html');
+    // Si ya hay sesión válida, redirigir al panel
+    if (sessionStorage.getItem('hola_token')) {
+        window.location.replace('./gestion_usuarios.html');
+    }
+
+    // Login usando Supabase Auth a través del backend no es necesario:
+    // el frontend puede llamar directamente a Supabase para autenticar,
+    // luego usa el access_token de Supabase para todas las llamadas al backend.
+    const SUPABASE_URL      = 'https://tectctwdrrmlzujakzyq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlY3RjdHdkcnJtbHp1amFrenlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMTQ5NDQsImV4cCI6MjA4Njg5MDk0NH0.s_IsL2yJKgb33j-8VvvOxEuCzFH4WjFv_s5MqhVBTjI'; // ← reemplaza con tu anon key
 
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        const usuario  = document.getElementById('username').value.trim();
+        const email    = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const errorDiv = document.getElementById('errorMessage');
-        const btnText    = document.getElementById('btnText');
-        const btnLoading = document.getElementById('btnLoading');
 
-        // Limpiar error previo y mostrar loading
         errorDiv.style.display = 'none';
-        btnText.style.display    = 'none';
-        btnLoading.style.display = 'inline';
+        document.getElementById('btnText').style.display    = 'none';
+        document.getElementById('btnLoading').style.display = 'inline';
         document.getElementById('loginBtn').disabled = true;
 
         try {
-            const res = await fetch(`${API_URL}/api/auth/login`, {
+            // Autenticar directamente con Supabase Auth
+            const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ usuario, password })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_ANON_KEY,
+                },
+                body: JSON.stringify({ email, password })
             });
 
             const data = await res.json();
 
-            if (!res.ok) throw new Error(data.error || 'Error de autenticación');
+            if (!res.ok) {
+                throw new Error(data.error_description || data.msg || 'Email o contraseña incorrectos.');
+            }
 
-            // Guardar token y redirigir
-            sessionStorage.setItem('hola_token', data.token);
-            sessionStorage.setItem('hola_usuario', data.usuario);
+            // Guardar el access_token de Supabase (es el que el backend espera)
+            sessionStorage.setItem('hola_token', data.access_token);
+            sessionStorage.setItem('hola_refresh', data.refresh_token);
+
+            // Ir al panel (initUserSession cargará el perfil y el rol)
             window.location.href = './gestion_usuarios.html';
 
         } catch (err) {
@@ -101,8 +113,8 @@
             document.getElementById('password').value = '';
             document.getElementById('password').focus();
         } finally {
-            btnText.style.display    = 'inline';
-            btnLoading.style.display = 'none';
+            document.getElementById('btnText').style.display    = 'inline';
+            document.getElementById('btnLoading').style.display = 'none';
             document.getElementById('loginBtn').disabled = false;
         }
     });
@@ -119,10 +131,7 @@
         }
     }
 
-    window.addEventListener('load', () => {
-        document.getElementById('username').focus();
-    });
+    window.addEventListener('load', () => document.getElementById('email').focus());
 </script>
-
 </body>
 </html>

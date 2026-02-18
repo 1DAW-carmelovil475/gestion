@@ -26,15 +26,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 async function loadAll() {
     showLoading(true);
     try {
-        await Promise.all([
-            loadEmpresas(),
-            // loadContratos(), // DESACTIVADO — Contratos
-            // loadFacturas(),  // DESACTIVADO — Facturas
-            loadTickets()
-        ]);
+        const loads = [loadEmpresas(), loadTickets()];
+        if (isAdmin()) loads.push(loadUsuarios());
+        await Promise.all(loads);
         renderCompanies();
-        // renderContracts(); // DESACTIVADO — Contratos
-        // renderInvoices();  // DESACTIVADO — Facturas
         renderTickets();
         updateStats();
     } catch (e) {
@@ -1565,3 +1560,158 @@ document.getElementById('addTicketBtn').addEventListener('click',   openTicketMo
 window.addEventListener('click', function (e) {
     if (e.target.classList.contains('modal')) e.target.style.display = 'none';
 });
+
+// ============================================
+// USUARIOS — CRUD (solo admin)
+// ============================================
+let usuarios = [];
+
+async function loadUsuarios() {
+    if (!isAdmin()) return;
+    usuarios = await apiFetch('/api/usuarios');
+    renderUsuarios();
+}
+
+function renderUsuarios() {
+    const table = document.getElementById('usersTable');
+    const cards = document.getElementById('usersCards');
+
+    document.getElementById('totalUsuarios').textContent    = usuarios.length;
+    document.getElementById('totalAdmins').textContent      = usuarios.filter(u => u.rol === 'admin').length;
+    document.getElementById('totalTrabajadores').textContent = usuarios.filter(u => u.rol === 'trabajador').length;
+
+    if (!usuarios.length) {
+        if (table) table.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--gray)">Sin usuarios registrados</td></tr>`;
+        return;
+    }
+
+    const myId = sessionStorage.getItem('hola_id') || '';
+
+    if (table) {
+        table.innerHTML = usuarios.map(u => `
+            <tr>
+                <td><strong>${u.nombre}</strong>${u.id === myId ? ' <span style="font-size:0.72rem;background:#dbeafe;color:#2563eb;padding:2px 7px;border-radius:10px">Tú</span>' : ''}</td>
+                <td>${u.email}</td>
+                <td><span class="status" style="${u.rol === 'admin' ? 'background:#f3e8ff;color:#9333ea' : 'background:#dcfce7;color:#15803d'}">${u.rol === 'admin' ? 'Admin' : 'Trabajador'}</span></td>
+                <td><span class="status ${u.activo ? 'Activo' : 'Suspendido'}">${u.activo ? 'Activo' : 'Desactivado'}</span></td>
+                <td>${formatDate(u.created_at)}</td>
+                <td>
+                    <button class="btn-action btn-edit"   onclick="editUser('${u.id}')"   title="Editar"><i class="fas fa-edit"></i></button>
+                    ${u.id !== myId ? `<button class="btn-action btn-delete" onclick="deleteUser('${u.id}','${u.nombre}')" title="Eliminar"><i class="fas fa-trash"></i></button>` : ''}
+                </td>
+            </tr>`).join('');
+    }
+
+    if (cards) {
+        cards.innerHTML = usuarios.map(u => `
+            <div class="data-card">
+                <div class="data-card-header">
+                    <div>
+                        <div class="data-card-title">${u.nombre}${u.id === myId ? ' <span style="font-size:0.72rem;background:#dbeafe;color:#2563eb;padding:2px 7px;border-radius:10px">Tú</span>' : ''}</div>
+                        <div class="data-card-subtitle">${u.email}</div>
+                    </div>
+                    <span class="status ${u.activo ? 'Activo' : 'Suspendido'}">${u.activo ? 'Activo' : 'Desactivado'}</span>
+                </div>
+                <div class="data-card-meta">
+                    <span><i class="fas fa-user-tag"></i> ${u.rol === 'admin' ? 'Administrador' : 'Trabajador'}</span>
+                    <span><i class="fas fa-calendar-alt"></i> ${formatDate(u.created_at)}</span>
+                </div>
+                <div class="data-card-actions">
+                    <button class="btn-action btn-edit" onclick="editUser('${u.id}')"><i class="fas fa-edit"></i> Editar</button>
+                    ${u.id !== myId ? `<button class="btn-action btn-delete" onclick="deleteUser('${u.id}','${u.nombre}')"><i class="fas fa-trash"></i></button>` : ''}
+                </div>
+            </div>`).join('');
+    }
+}
+
+function openUserModal() {
+    document.getElementById('userModalTitle').textContent = 'Nuevo Usuario';
+    document.getElementById('editUserId').value = '';
+    document.getElementById('userNombre').value = '';
+    document.getElementById('userEmail').value  = '';
+    document.getElementById('userRol').value    = 'trabajador';
+    document.getElementById('userEmailGroup').style.display  = '';
+    document.getElementById('userActivoGroup').style.display = 'none';
+    document.getElementById('userPasswordInfo').style.display = 'none';
+    document.getElementById('userModal').style.display = 'flex';
+}
+
+function editUser(id) {
+    const u = usuarios.find(x => x.id === id);
+    if (!u) return;
+    document.getElementById('userModalTitle').textContent    = 'Editar Usuario';
+    document.getElementById('editUserId').value              = u.id;
+    document.getElementById('userNombre').value              = u.nombre;
+    document.getElementById('userEmail').value               = u.email;
+    document.getElementById('userRol').value                 = u.rol;
+    document.getElementById('userActivo').value              = String(u.activo);
+    document.getElementById('userEmailGroup').style.display  = 'none'; // no se puede cambiar el email
+    document.getElementById('userActivoGroup').style.display = '';
+    document.getElementById('userPasswordInfo').style.display = 'none';
+    document.getElementById('userModal').style.display = 'flex';
+}
+
+function closeUserModal() {
+    document.getElementById('userModal').style.display = 'none';
+}
+
+async function saveUser() {
+    const id     = document.getElementById('editUserId').value;
+    const nombre = document.getElementById('userNombre').value.trim();
+    const email  = document.getElementById('userEmail').value.trim();
+    const rol    = document.getElementById('userRol').value;
+    const activo = document.getElementById('userActivo').value === 'true';
+
+    if (!nombre || (!id && !email)) {
+        showToast('error', 'Error', 'Nombre y email son obligatorios');
+        return;
+    }
+
+    showLoading(true);
+    try {
+        if (id) {
+            // Editar
+            await apiFetch(`/api/usuarios/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ nombre, rol, activo })
+            });
+            showToast('success', 'Actualizado', 'Usuario actualizado correctamente');
+            closeUserModal();
+        } else {
+            // Crear — el backend devuelve _tempPassword
+            const res = await apiFetch('/api/usuarios', {
+                method: 'POST',
+                body: JSON.stringify({ nombre, email, rol })
+            });
+
+            // Mostrar contraseña generada en el modal antes de cerrar
+            document.getElementById('userPasswordText').textContent = res._tempPassword || '(ver email)';
+            document.getElementById('userPasswordInfo').style.display = '';
+            document.getElementById('userEmailGroup').style.display  = 'none';
+            document.getElementById('userNombre').disabled = true;
+            document.getElementById('userRol').disabled    = true;
+
+            // Cambiar botón de guardar a cerrar
+            showToast('success', 'Creado', `Usuario creado. Contraseña enviada a ${email}`);
+        }
+        await loadUsuarios();
+    } catch (e) {
+        showToast('error', 'Error', e.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function deleteUser(id, nombre) {
+    if (!confirm(`¿Eliminar el usuario "${nombre}"? Esta acción no se puede deshacer.`)) return;
+    showLoading(true);
+    try {
+        await apiFetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+        showToast('success', 'Eliminado', `Usuario ${nombre} eliminado`);
+        await loadUsuarios();
+    } catch (e) {
+        showToast('error', 'Error', e.message);
+    } finally {
+        showLoading(false);
+    }
+}

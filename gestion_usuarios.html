@@ -24,6 +24,10 @@
         <a href="#empresas" class="nav-link active" data-section="empresas">
             <i class="fas fa-building"></i> Empresas
         </a>
+        <a href="#usuarios" class="nav-link" data-section="usuarios" data-admin-only>
+            <i class="fas fa-users-cog"></i> Usuarios
+        </a>
+
         <!-- DESACTIVADO — Contratos
         <a href="#contratos" class="nav-link" data-section="contratos">
             <i class="fas fa-file-contract"></i> Contratos
@@ -56,6 +60,10 @@
     <a class="bottom-nav-item active" data-section="empresas">
         <i class="fas fa-building"></i>
         <span>Empresas</span>
+    </a>
+    <a class="bottom-nav-item" data-section="usuarios" data-admin-only>
+        <i class="fas fa-users-cog"></i>
+        <span>Usuarios</span>
     </a>
     <!-- DESACTIVADO — Contratos
     <a class="bottom-nav-item" data-section="contratos">
@@ -314,6 +322,97 @@
     </div>
     <div class="cards-list mobile-only" id="ticketsCards"></div>
 </section>
+
+<!-- ============ SECTION: USUARIOS (solo admin) ============ -->
+<section id="usuarios" class="content-section" data-admin-only>
+    <div class="section-header">
+        <div>
+            <h1><i class="fas fa-users-cog"></i> Usuarios</h1>
+            <p>Gestión de accesos al panel</p>
+        </div>
+        <button id="addUserBtn" class="btn-primary" onclick="openUserModal()">
+            <i class="fas fa-plus"></i>
+            <span class="btn-label">Nuevo</span>
+        </button>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#dbeafe;color:#2563eb"><i class="fas fa-users"></i></div>
+            <div class="stat-info"><h3 id="totalUsuarios">0</h3><p>Total</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#f3e8ff;color:#9333ea"><i class="fas fa-user-shield"></i></div>
+            <div class="stat-info"><h3 id="totalAdmins">0</h3><p>Admins</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="fas fa-user-check"></i></div>
+            <div class="stat-info"><h3 id="totalTrabajadores">0</h3><p>Trabajadores</p></div>
+        </div>
+    </div>
+
+    <div class="table-container desktop-only">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th><th>Email</th><th>Rol</th>
+                    <th>Estado</th><th>Creado</th><th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="usersTable"></tbody>
+        </table>
+    </div>
+
+    <div class="cards-list mobile-only" id="usersCards"></div>
+</section>
+
+<!-- MODAL: CREAR USUARIO -->
+<div class="modal" id="userModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="userModalTitle">Nuevo Usuario</h2>
+            <button class="modal-close" onclick="closeUserModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editUserId">
+            <div class="form-group">
+                <label>Nombre completo *</label>
+                <input type="text" id="userNombre" placeholder="María García" required>
+            </div>
+            <div class="form-group" id="userEmailGroup">
+                <label>Email *</label>
+                <input type="email" id="userEmail" placeholder="maria@holainformatica.com" required>
+            </div>
+            <div class="form-group">
+                <label>Rol *</label>
+                <select id="userRol">
+                    <option value="trabajador">Trabajador</option>
+                    <option value="admin">Administrador</option>
+                </select>
+            </div>
+            <div class="form-group" id="userActivoGroup" style="display:none">
+                <label>Estado</label>
+                <select id="userActivo">
+                    <option value="true">Activo</option>
+                    <option value="false">Desactivado</option>
+                </select>
+            </div>
+            <div id="userPasswordInfo" style="display:none;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:14px 16px;margin-top:8px">
+                <p style="font-size:0.85rem;color:#166534;font-weight:600;margin-bottom:6px">
+                    <i class="fas fa-key"></i> Contraseña generada:
+                </p>
+                <code id="userPasswordText" style="font-size:1rem;color:#15803d;background:#dcfce7;padding:4px 10px;border-radius:6px;display:block;text-align:center;letter-spacing:2px"></code>
+                <p style="font-size:0.78rem;color:#16a34a;margin-top:8px">
+                    <i class="fas fa-envelope"></i> Se enviará por email al usuario automáticamente.
+                </p>
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-primary" onclick="saveUser()"><i class="fas fa-save"></i> Guardar</button>
+            <button class="btn-secondary" onclick="closeUserModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
 
 </main>
 
@@ -647,6 +746,23 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script src="./js/config.js"></script>
+<script>
+(async function() {
+    if (!sessionStorage.getItem('hola_token')) {
+        window.location.replace('./index.html');
+        return;
+    }
+    // Carga perfil, aplica restricciones de rol
+    await initUserSession();
+})();
+
+document.getElementById('logoutBtn').addEventListener('click', function() {
+    if (confirm('¿Cerrar sesión?')) {
+        sessionStorage.clear();
+        window.location.href = './index.html';
+    }
+});
+</script>
 <script>
 (function() {
     if (!sessionStorage.getItem('hola_token')) {
