@@ -24,12 +24,16 @@
         <a href="#empresas" class="nav-link active" data-section="empresas">
             <i class="fas fa-building"></i> Empresas
         </a>
+        <!-- DESACTIVADO — Contratos
         <a href="#contratos" class="nav-link" data-section="contratos">
             <i class="fas fa-file-contract"></i> Contratos
         </a>
+        -->
+        <!-- DESACTIVADO — Facturas
         <a href="#facturas" class="nav-link" data-section="facturas">
             <i class="fas fa-file-invoice-dollar"></i> Facturas
         </a>
+        -->
         <a href="#soporte" class="nav-link" data-section="soporte">
             <i class="fas fa-headset"></i> Tickets
         </a>
@@ -53,14 +57,18 @@
         <i class="fas fa-building"></i>
         <span>Empresas</span>
     </a>
+    <!-- DESACTIVADO — Contratos
     <a class="bottom-nav-item" data-section="contratos">
         <i class="fas fa-file-contract"></i>
         <span>Contratos</span>
     </a>
+    -->
+    <!-- DESACTIVADO — Facturas
     <a class="bottom-nav-item" data-section="facturas">
         <i class="fas fa-file-invoice-dollar"></i>
         <span>Facturas</span>
     </a>
+    -->
     <a class="bottom-nav-item" data-section="soporte">
         <i class="fas fa-headset"></i>
         <span>Tickets</span>
@@ -129,7 +137,6 @@
         </div>
     </div>
 
-    <!-- Vista tabla (desktop) -->
     <div class="table-container desktop-only">
         <table>
             <thead>
@@ -142,13 +149,11 @@
         </table>
     </div>
 
-    <!-- Vista cards (móvil) -->
     <div class="cards-list mobile-only" id="companyCards"></div>
-
     <div class="pagination" id="pagination"></div>
 </section>
 
-<!-- ============ SECTION: EMPRESA DETALLE (página completa) ============ -->
+<!-- ============ SECTION: EMPRESA DETALLE ============ -->
 <section id="empresa-detalle" class="content-section">
     <div class="empresa-detalle-header">
         <button class="btn-back" onclick="volverAEmpresas()">
@@ -160,10 +165,8 @@
         </button>
     </div>
 
-    <!-- Info básica empresa -->
     <div class="empresa-info-grid" id="empresaInfoGrid"></div>
 
-    <!-- Tabs IT -->
     <div class="it-page-section">
         <div class="it-tabs-wrapper">
             <div class="it-tabs" id="itTabsPage">
@@ -179,7 +182,8 @@
     </div>
 </section>
 
-<!-- ============ SECTION: CONTRATOS ============ -->
+<!-- ============ SECTION: CONTRATOS (DESACTIVADO) ============ -->
+<!--
 <section id="contratos" class="content-section">
     <div class="section-header">
         <div>
@@ -221,8 +225,10 @@
     </div>
     <div class="cards-list mobile-only" id="contractsCards"></div>
 </section>
+-->
 
-<!-- ============ SECTION: FACTURAS ============ -->
+<!-- ============ SECTION: FACTURAS (DESACTIVADO) ============ -->
+<!--
 <section id="facturas" class="content-section">
     <div class="section-header">
         <div>
@@ -264,6 +270,7 @@
     </div>
     <div class="cards-list mobile-only" id="invoicesCards"></div>
 </section>
+-->
 
 <!-- ============ SECTION: TICKETS ============ -->
 <section id="soporte" class="content-section">
@@ -426,7 +433,8 @@
     </div>
 </div>
 
-<!-- MODAL: CONTRATO -->
+<!-- MODAL: CONTRATO (DESACTIVADO) -->
+<!--
 <div class="modal" id="contractModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -473,8 +481,10 @@
         </div>
     </div>
 </div>
+-->
 
-<!-- MODAL: FACTURA -->
+<!-- MODAL: FACTURA (DESACTIVADO) -->
+<!--
 <div class="modal" id="invoiceModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -519,6 +529,7 @@
         </div>
     </div>
 </div>
+-->
 
 <!-- MODAL: TICKET -->
 <div class="modal" id="ticketModal">
@@ -566,7 +577,9 @@
         </div>
     </div>
 </div>
-<!-- MODAL: DETALLE CONTRATO -->
+
+<!-- MODAL: DETALLE CONTRATO (DESACTIVADO) -->
+<!--
 <div class="modal" id="contractDetailModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -579,8 +592,10 @@
         </div>
     </div>
 </div>
+-->
 
-<!-- MODAL: DETALLE FACTURA -->
+<!-- MODAL: DETALLE FACTURA (DESACTIVADO) -->
+<!--
 <div class="modal" id="invoiceDetailModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -593,6 +608,7 @@
         </div>
     </div>
 </div>
+-->
 
 <!-- MODAL: DETALLE TICKET -->
 <div class="modal" id="ticketDetailModal">

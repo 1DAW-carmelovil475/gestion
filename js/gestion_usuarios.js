@@ -5,8 +5,8 @@
 
 let itItemsCache = [];
 let companies  = [];
-let contracts  = [];
-let invoices   = [];
+// let contracts  = []; // DESACTIVADO — Contratos
+// let invoices   = []; // DESACTIVADO — Facturas
 let tickets    = [];
 let currentPage = 1;
 const itemsPerPage = 10;
@@ -26,10 +26,15 @@ document.addEventListener('DOMContentLoaded', async function () {
 async function loadAll() {
     showLoading(true);
     try {
-        await Promise.all([loadEmpresas(), loadContratos(), loadFacturas(), loadTickets()]);
+        await Promise.all([
+            loadEmpresas(),
+            // loadContratos(), // DESACTIVADO — Contratos
+            // loadFacturas(),  // DESACTIVADO — Facturas
+            loadTickets()
+        ]);
         renderCompanies();
-        renderContracts();
-        renderInvoices();
+        // renderContracts(); // DESACTIVADO — Contratos
+        // renderInvoices();  // DESACTIVADO — Facturas
         renderTickets();
         updateStats();
     } catch (e) {
@@ -43,8 +48,8 @@ async function loadAll() {
 // CARGA DE DATOS
 // ============================================
 async function loadEmpresas()  { companies = await apiFetch('/api/empresas'); }
-async function loadContratos() { contracts = await apiFetch('/api/contratos'); }
-async function loadFacturas()  { invoices  = await apiFetch('/api/facturas'); }
+// async function loadContratos() { contracts = await apiFetch('/api/contratos'); } // DESACTIVADO — Contratos
+// async function loadFacturas()  { invoices  = await apiFetch('/api/facturas'); }  // DESACTIVADO — Facturas
 async function loadTickets()   { tickets   = await apiFetch('/api/tickets'); }
 
 // ============================================
@@ -70,17 +75,14 @@ function setupNavigation() {
 }
 
 function navigateTo(sectionId) {
-    // Actualizar nav links top
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
     const activeLink = document.querySelector(`.nav-link[data-section="${sectionId}"]`);
     if (activeLink) activeLink.classList.add('active');
 
-    // Actualizar bottom nav
     document.querySelectorAll('.bottom-nav-item').forEach(l => l.classList.remove('active'));
     const activeBottom = document.querySelector(`.bottom-nav-item[data-section="${sectionId}"]`);
     if (activeBottom) activeBottom.classList.add('active');
 
-    // Mostrar sección
     document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
     const target = document.getElementById(sectionId);
     if (target) target.classList.add('active');
@@ -209,112 +211,112 @@ function renderPagination(totalPages) {
 function goToPage(page) { currentPage = page; renderCompanies(); }
 
 // ============================================
-// RENDERIZADO — CONTRATOS
+// RENDERIZADO — CONTRATOS (DESACTIVADO)
 // ============================================
-function renderContracts() {
-    const table = document.getElementById('contractsTable');
-    const cards = document.getElementById('contractsCards');
-    const emptyMsg = 'Sin contratos registrados';
-
-    if (!contracts.length) {
-        if (table) table.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">${emptyMsg}</td></tr>`;
-        if (cards) cards.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gray)">${emptyMsg}</div>`;
-        updateContractStats();
-        return;
-    }
-
-    if (table) {
-        table.innerHTML = contracts.map(c => `
-            <tr class="clickable-row" onclick="viewContractDetail('${c.id}')">
-                <td><strong>${c.empresas?.nombre || '—'}</strong></td>
-                <td>${c.tipo}</td>
-                <td>${formatDate(c.fecha_inicio)}</td>
-                <td>${formatDate(c.fecha_fin)}</td>
-                <td><strong>${parseFloat(c.valor || 0).toLocaleString('es-ES')}€</strong></td>
-                <td><span class="status ${(c.estado||'').replace(/ /g,'-')}">${c.estado}</span></td>
-                <td onclick="event.stopPropagation()">
-                    <button class="btn-action btn-delete" onclick="deleteContract('${c.id}')" title="Eliminar">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>`).join('');
-    }
-
-    if (cards) {
-        cards.innerHTML = contracts.map(c => `
-            <div class="data-card clickable-row" onclick="viewContractDetail('${c.id}')">
-                <div class="data-card-header">
-                    <div>
-                        <div class="data-card-title">${c.empresas?.nombre || '—'}</div>
-                        <div class="data-card-subtitle">${c.tipo}</div>
-                    </div>
-                    <span class="status ${(c.estado||'').replace(/ /g,'-')}">${c.estado}</span>
-                </div>
-                <div class="data-card-meta">
-                    <span><i class="fas fa-calendar-alt"></i> ${formatDate(c.fecha_inicio)} → ${formatDate(c.fecha_fin)}</span>
-                    <span><i class="fas fa-euro-sign"></i> ${parseFloat(c.valor||0).toLocaleString('es-ES')}€/año</span>
-                </div>
-                <div class="data-card-actions" onclick="event.stopPropagation()">
-                    <button class="btn-action btn-delete" onclick="deleteContract('${c.id}')"><i class="fas fa-trash"></i> Eliminar</button>
-                </div>
-            </div>`).join('');
-    }
-
-    updateContractStats();
-}
+// function renderContracts() {
+//     const table = document.getElementById('contractsTable');
+//     const cards = document.getElementById('contractsCards');
+//     const emptyMsg = 'Sin contratos registrados';
+//
+//     if (!contracts.length) {
+//         if (table) table.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">${emptyMsg}</td></tr>`;
+//         if (cards) cards.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gray)">${emptyMsg}</div>`;
+//         updateContractStats();
+//         return;
+//     }
+//
+//     if (table) {
+//         table.innerHTML = contracts.map(c => `
+//             <tr class="clickable-row" onclick="viewContractDetail('${c.id}')">
+//                 <td><strong>${c.empresas?.nombre || '—'}</strong></td>
+//                 <td>${c.tipo}</td>
+//                 <td>${formatDate(c.fecha_inicio)}</td>
+//                 <td>${formatDate(c.fecha_fin)}</td>
+//                 <td><strong>${parseFloat(c.valor || 0).toLocaleString('es-ES')}€</strong></td>
+//                 <td><span class="status ${(c.estado||'').replace(/ /g,'-')}">${c.estado}</span></td>
+//                 <td onclick="event.stopPropagation()">
+//                     <button class="btn-action btn-delete" onclick="deleteContract('${c.id}')" title="Eliminar">
+//                         <i class="fas fa-trash"></i>
+//                     </button>
+//                 </td>
+//             </tr>`).join('');
+//     }
+//
+//     if (cards) {
+//         cards.innerHTML = contracts.map(c => `
+//             <div class="data-card clickable-row" onclick="viewContractDetail('${c.id}')">
+//                 <div class="data-card-header">
+//                     <div>
+//                         <div class="data-card-title">${c.empresas?.nombre || '—'}</div>
+//                         <div class="data-card-subtitle">${c.tipo}</div>
+//                     </div>
+//                     <span class="status ${(c.estado||'').replace(/ /g,'-')}">${c.estado}</span>
+//                 </div>
+//                 <div class="data-card-meta">
+//                     <span><i class="fas fa-calendar-alt"></i> ${formatDate(c.fecha_inicio)} → ${formatDate(c.fecha_fin)}</span>
+//                     <span><i class="fas fa-euro-sign"></i> ${parseFloat(c.valor||0).toLocaleString('es-ES')}€/año</span>
+//                 </div>
+//                 <div class="data-card-actions" onclick="event.stopPropagation()">
+//                     <button class="btn-action btn-delete" onclick="deleteContract('${c.id}')"><i class="fas fa-trash"></i> Eliminar</button>
+//                 </div>
+//             </div>`).join('');
+//     }
+//
+//     updateContractStats();
+// }
 
 // ============================================
-// RENDERIZADO — FACTURAS
+// RENDERIZADO — FACTURAS (DESACTIVADO)
 // ============================================
-function renderInvoices() {
-    const table = document.getElementById('invoicesTable');
-    const cards = document.getElementById('invoicesCards');
-
-    if (!invoices.length) {
-        if (table) table.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--gray)">Sin facturas registradas</td></tr>`;
-        if (cards) cards.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gray)">Sin facturas registradas</div>`;
-        updateInvoiceStats();
-        return;
-    }
-
-    if (table) {
-        table.innerHTML = invoices.map(f => `
-            <tr class="clickable-row" onclick="viewInvoiceDetail('${f.id}')">
-                <td><strong>${f.numero}</strong></td>
-                <td>${f.empresas?.nombre || '—'}</td>
-                <td>${formatDate(f.fecha)}</td>
-                <td><strong>${parseFloat(f.importe || 0).toFixed(2)}€</strong></td>
-                <td><span class="status ${f.estado}">${f.estado}</span></td>
-                <td onclick="event.stopPropagation()">
-                    <button class="btn-action btn-delete" onclick="deleteInvoice('${f.id}')" title="Eliminar">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>`).join('');
-    }
-
-    if (cards) {
-        cards.innerHTML = invoices.map(f => `
-            <div class="data-card clickable-row" onclick="viewInvoiceDetail('${f.id}')">
-                <div class="data-card-header">
-                    <div>
-                        <div class="data-card-title">${f.numero}</div>
-                        <div class="data-card-subtitle">${f.empresas?.nombre || '—'}</div>
-                    </div>
-                    <span class="status ${f.estado}">${f.estado}</span>
-                </div>
-                <div class="data-card-meta">
-                    <span><i class="fas fa-calendar-alt"></i> ${formatDate(f.fecha)}</span>
-                    <span><i class="fas fa-euro-sign"></i> ${parseFloat(f.importe||0).toFixed(2)}€</span>
-                </div>
-                <div class="data-card-actions" onclick="event.stopPropagation()">
-                    <button class="btn-action btn-delete" onclick="deleteInvoice('${f.id}')"><i class="fas fa-trash"></i> Eliminar</button>
-                </div>
-            </div>`).join('');
-    }
-
-    updateInvoiceStats();
-}
+// function renderInvoices() {
+//     const table = document.getElementById('invoicesTable');
+//     const cards = document.getElementById('invoicesCards');
+//
+//     if (!invoices.length) {
+//         if (table) table.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--gray)">Sin facturas registradas</td></tr>`;
+//         if (cards) cards.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gray)">Sin facturas registradas</div>`;
+//         updateInvoiceStats();
+//         return;
+//     }
+//
+//     if (table) {
+//         table.innerHTML = invoices.map(f => `
+//             <tr class="clickable-row" onclick="viewInvoiceDetail('${f.id}')">
+//                 <td><strong>${f.numero}</strong></td>
+//                 <td>${f.empresas?.nombre || '—'}</td>
+//                 <td>${formatDate(f.fecha)}</td>
+//                 <td><strong>${parseFloat(f.importe || 0).toFixed(2)}€</strong></td>
+//                 <td><span class="status ${f.estado}">${f.estado}</span></td>
+//                 <td onclick="event.stopPropagation()">
+//                     <button class="btn-action btn-delete" onclick="deleteInvoice('${f.id}')" title="Eliminar">
+//                         <i class="fas fa-trash"></i>
+//                     </button>
+//                 </td>
+//             </tr>`).join('');
+//     }
+//
+//     if (cards) {
+//         cards.innerHTML = invoices.map(f => `
+//             <div class="data-card clickable-row" onclick="viewInvoiceDetail('${f.id}')">
+//                 <div class="data-card-header">
+//                     <div>
+//                         <div class="data-card-title">${f.numero}</div>
+//                         <div class="data-card-subtitle">${f.empresas?.nombre || '—'}</div>
+//                     </div>
+//                     <span class="status ${f.estado}">${f.estado}</span>
+//                 </div>
+//                 <div class="data-card-meta">
+//                     <span><i class="fas fa-calendar-alt"></i> ${formatDate(f.fecha)}</span>
+//                     <span><i class="fas fa-euro-sign"></i> ${parseFloat(f.importe||0).toFixed(2)}€</span>
+//                 </div>
+//                 <div class="data-card-actions" onclick="event.stopPropagation()">
+//                     <button class="btn-action btn-delete" onclick="deleteInvoice('${f.id}')"><i class="fas fa-trash"></i> Eliminar</button>
+//                 </div>
+//             </div>`).join('');
+//     }
+//
+//     updateInvoiceStats();
+// }
 
 // ============================================
 // RENDERIZADO — TICKETS
@@ -371,84 +373,84 @@ function renderTickets() {
 }
 
 // ============================================
-// DETALLE — CONTRATO
+// DETALLE — CONTRATO (DESACTIVADO)
 // ============================================
-function viewContractDetail(id) {
-    const c = contracts.find(x => x.id === id);
-    if (!c) return;
-    document.getElementById('contractDetailBody').innerHTML = `
-        <div class="detail-info-grid">
-            <div class="detail-info-item">
-                <span class="detail-info-label"><i class="fas fa-building"></i> Empresa</span>
-                <span class="detail-info-value">${c.empresas?.nombre || '—'}</span>
-            </div>
-            <div class="detail-info-item">
-                <span class="detail-info-label"><i class="fas fa-tag"></i> Tipo</span>
-                <span class="detail-info-value">${c.tipo || '—'}</span>
-            </div>
-            <div class="detail-info-item">
-                <span class="detail-info-label"><i class="fas fa-calendar-alt"></i> Fecha Inicio</span>
-                <span class="detail-info-value">${formatDate(c.fecha_inicio)}</span>
-            </div>
-            <div class="detail-info-item">
-                <span class="detail-info-label"><i class="fas fa-calendar-times"></i> Fecha Fin</span>
-                <span class="detail-info-value">${formatDate(c.fecha_fin)}</span>
-            </div>
-            <div class="detail-info-item">
-                <span class="detail-info-label"><i class="fas fa-euro-sign"></i> Valor Anual</span>
-                <span class="detail-info-value"><strong>${parseFloat(c.valor || 0).toLocaleString('es-ES')}€</strong></span>
-            </div>
-            <div class="detail-info-item">
-                <span class="detail-info-label"><i class="fas fa-circle"></i> Estado</span>
-                <span class="detail-info-value"><span class="status ${(c.estado||'').replace(/ /g,'-')}">${c.estado}</span></span>
-            </div>
-        </div>
-        <div class="detail-notes-box">
-            <div class="detail-notes-label"><i class="fas fa-sticky-note"></i> Notas</div>
-            <div class="detail-notes-content">${c.notas || '<em style="color:var(--gray)">Sin nota</em>'}</div>
-        </div>`;
-    document.getElementById('contractDetailModal').style.display = 'flex';
-}
+// function viewContractDetail(id) {
+//     const c = contracts.find(x => x.id === id);
+//     if (!c) return;
+//     document.getElementById('contractDetailBody').innerHTML = `
+//         <div class="detail-info-grid">
+//             <div class="detail-info-item">
+//                 <span class="detail-info-label"><i class="fas fa-building"></i> Empresa</span>
+//                 <span class="detail-info-value">${c.empresas?.nombre || '—'}</span>
+//             </div>
+//             <div class="detail-info-item">
+//                 <span class="detail-info-label"><i class="fas fa-tag"></i> Tipo</span>
+//                 <span class="detail-info-value">${c.tipo || '—'}</span>
+//             </div>
+//             <div class="detail-info-item">
+//                 <span class="detail-info-label"><i class="fas fa-calendar-alt"></i> Fecha Inicio</span>
+//                 <span class="detail-info-value">${formatDate(c.fecha_inicio)}</span>
+//             </div>
+//             <div class="detail-info-item">
+//                 <span class="detail-info-label"><i class="fas fa-calendar-times"></i> Fecha Fin</span>
+//                 <span class="detail-info-value">${formatDate(c.fecha_fin)}</span>
+//             </div>
+//             <div class="detail-info-item">
+//                 <span class="detail-info-label"><i class="fas fa-euro-sign"></i> Valor Anual</span>
+//                 <span class="detail-info-value"><strong>${parseFloat(c.valor || 0).toLocaleString('es-ES')}€</strong></span>
+//             </div>
+//             <div class="detail-info-item">
+//                 <span class="detail-info-label"><i class="fas fa-circle"></i> Estado</span>
+//                 <span class="detail-info-value"><span class="status ${(c.estado||'').replace(/ /g,'-')}">${c.estado}</span></span>
+//             </div>
+//         </div>
+//         <div class="detail-notes-box">
+//             <div class="detail-notes-label"><i class="fas fa-sticky-note"></i> Notas</div>
+//             <div class="detail-notes-content">${c.notas || '<em style="color:var(--gray)">Sin nota</em>'}</div>
+//         </div>`;
+//     document.getElementById('contractDetailModal').style.display = 'flex';
+// }
 
 // ============================================
-// DETALLE — FACTURA
+// DETALLE — FACTURA (DESACTIVADO)
 // ============================================
-function viewInvoiceDetail(id) {
-    const f = invoices.find(x => x.id === id);
-    if (!f) return;
-    document.getElementById('invoiceDetailBody').innerHTML = `
-        <div class="detail-info-grid">
-            <div class="detail-info-item">
-                <span class="detail-info-label"><i class="fas fa-hashtag"></i> Nº Factura</span>
-                <span class="detail-info-value"><strong>${f.numero}</strong></span>
-            </div>
-            <div class="detail-info-item">
-                <span class="detail-info-label"><i class="fas fa-building"></i> Empresa</span>
-                <span class="detail-info-value">${f.empresas?.nombre || '—'}</span>
-            </div>
-            <div class="detail-info-item">
-                <span class="detail-info-label"><i class="fas fa-calendar-alt"></i> Fecha Emisión</span>
-                <span class="detail-info-value">${formatDate(f.fecha)}</span>
-            </div>
-            <div class="detail-info-item">
-                <span class="detail-info-label"><i class="fas fa-calendar-times"></i> Vencimiento</span>
-                <span class="detail-info-value">${formatDate(f.fecha_vencimiento)}</span>
-            </div>
-            <div class="detail-info-item">
-                <span class="detail-info-label"><i class="fas fa-euro-sign"></i> Importe</span>
-                <span class="detail-info-value"><strong>${parseFloat(f.importe || 0).toFixed(2)}€</strong></span>
-            </div>
-            <div class="detail-info-item">
-                <span class="detail-info-label"><i class="fas fa-circle"></i> Estado</span>
-                <span class="detail-info-value"><span class="status ${f.estado}">${f.estado}</span></span>
-            </div>
-        </div>
-        <div class="detail-notes-box">
-            <div class="detail-notes-label"><i class="fas fa-sticky-note"></i> Notas</div>
-            <div class="detail-notes-content">${f.notas || '<em style="color:var(--gray)">Sin nota</em>'}</div>
-        </div>`;
-    document.getElementById('invoiceDetailModal').style.display = 'flex';
-}
+// function viewInvoiceDetail(id) {
+//     const f = invoices.find(x => x.id === id);
+//     if (!f) return;
+//     document.getElementById('invoiceDetailBody').innerHTML = `
+//         <div class="detail-info-grid">
+//             <div class="detail-info-item">
+//                 <span class="detail-info-label"><i class="fas fa-hashtag"></i> Nº Factura</span>
+//                 <span class="detail-info-value"><strong>${f.numero}</strong></span>
+//             </div>
+//             <div class="detail-info-item">
+//                 <span class="detail-info-label"><i class="fas fa-building"></i> Empresa</span>
+//                 <span class="detail-info-value">${f.empresas?.nombre || '—'}</span>
+//             </div>
+//             <div class="detail-info-item">
+//                 <span class="detail-info-label"><i class="fas fa-calendar-alt"></i> Fecha Emisión</span>
+//                 <span class="detail-info-value">${formatDate(f.fecha)}</span>
+//             </div>
+//             <div class="detail-info-item">
+//                 <span class="detail-info-label"><i class="fas fa-calendar-times"></i> Vencimiento</span>
+//                 <span class="detail-info-value">${formatDate(f.fecha_vencimiento)}</span>
+//             </div>
+//             <div class="detail-info-item">
+//                 <span class="detail-info-label"><i class="fas fa-euro-sign"></i> Importe</span>
+//                 <span class="detail-info-value"><strong>${parseFloat(f.importe || 0).toFixed(2)}€</strong></span>
+//             </div>
+//             <div class="detail-info-item">
+//                 <span class="detail-info-label"><i class="fas fa-circle"></i> Estado</span>
+//                 <span class="detail-info-value"><span class="status ${f.estado}">${f.estado}</span></span>
+//             </div>
+//         </div>
+//         <div class="detail-notes-box">
+//             <div class="detail-notes-label"><i class="fas fa-sticky-note"></i> Notas</div>
+//             <div class="detail-notes-content">${f.notas || '<em style="color:var(--gray)">Sin nota</em>'}</div>
+//         </div>`;
+//     document.getElementById('invoiceDetailModal').style.display = 'flex';
+// }
 
 // ============================================
 // DETALLE — TICKET
@@ -503,22 +505,24 @@ function updateStats() {
     document.getElementById('empresasActivas').textContent = companies.filter(c => c.estado === 'Activo').length;
 }
 
-function updateContractStats() {
-    document.getElementById('totalContratos').textContent   = contracts.length;
-    document.getElementById('contratosActivos').textContent = contracts.filter(c => c.estado === 'Activo').length;
-    const d30 = new Date(); d30.setDate(d30.getDate() + 30);
-    document.getElementById('contratosPorVencer').textContent = contracts.filter(c =>
-        c.estado === 'Activo' && new Date(c.fecha_fin) <= d30).length;
-    const total = contracts.reduce((s, c) => s + parseFloat(c.valor || 0), 0);
-    document.getElementById('facturacionTotal').textContent = total.toLocaleString('es-ES') + '€';
-}
+// DESACTIVADO — Estadísticas de Contratos
+// function updateContractStats() {
+//     document.getElementById('totalContratos').textContent   = contracts.length;
+//     document.getElementById('contratosActivos').textContent = contracts.filter(c => c.estado === 'Activo').length;
+//     const d30 = new Date(); d30.setDate(d30.getDate() + 30);
+//     document.getElementById('contratosPorVencer').textContent = contracts.filter(c =>
+//         c.estado === 'Activo' && new Date(c.fecha_fin) <= d30).length;
+//     const total = contracts.reduce((s, c) => s + parseFloat(c.valor || 0), 0);
+//     document.getElementById('facturacionTotal').textContent = total.toLocaleString('es-ES') + '€';
+// }
 
-function updateInvoiceStats() {
-    document.getElementById('totalFacturas').textContent      = invoices.length;
-    document.getElementById('facturasPagadas').textContent    = invoices.filter(i => i.estado === 'Pagada').length;
-    document.getElementById('facturasPendientes').textContent = invoices.filter(i => i.estado === 'Pendiente').length;
-    document.getElementById('facturasVencidas').textContent   = invoices.filter(i => i.estado === 'Vencida').length;
-}
+// DESACTIVADO — Estadísticas de Facturas
+// function updateInvoiceStats() {
+//     document.getElementById('totalFacturas').textContent      = invoices.length;
+//     document.getElementById('facturasPagadas').textContent    = invoices.filter(i => i.estado === 'Pagada').length;
+//     document.getElementById('facturasPendientes').textContent = invoices.filter(i => i.estado === 'Pendiente').length;
+//     document.getElementById('facturasVencidas').textContent   = invoices.filter(i => i.estado === 'Vencida').length;
+// }
 
 function updateTicketStats() {
     document.getElementById('totalTickets').textContent    = tickets.length;
@@ -729,104 +733,104 @@ function removeContactRow(button) {
 }
 
 // ============================================
-// CONTRATOS — CRUD
+// CONTRATOS — CRUD (DESACTIVADO)
 // ============================================
-function openContractModal() {
-    document.getElementById('contractCompany').innerHTML =
-        companies.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
-    const today = new Date().toISOString().split('T')[0];
-    const next  = new Date(); next.setFullYear(next.getFullYear() + 1);
-    document.getElementById('contractStart').value  = today;
-    document.getElementById('contractEnd').value    = next.toISOString().split('T')[0];
-    document.getElementById('contractValue').value  = '';
-    document.getElementById('contractNotes').value  = '';
-    document.getElementById('contractModal').style.display = 'flex';
-}
-
-function closeContractModal() { document.getElementById('contractModal').style.display = 'none'; }
-
-async function saveContract() {
-    const empresa_id   = document.getElementById('contractCompany').value;
-    const tipo         = document.getElementById('contractType').value;
-    const fecha_inicio = document.getElementById('contractStart').value;
-    const fecha_fin    = document.getElementById('contractEnd').value;
-    const valor        = parseFloat(document.getElementById('contractValue').value);
-    if (!empresa_id || !tipo || !fecha_inicio || !fecha_fin || isNaN(valor)) {
-        showToast('error', 'Error', 'Completa todos los campos obligatorios'); return;
-    }
-    showLoading(true);
-    try {
-        await apiFetch('/api/contratos', { method: 'POST', body: JSON.stringify({
-            empresa_id, tipo, fecha_inicio, fecha_fin, valor, estado: 'Activo',
-            notas: document.getElementById('contractNotes').value || null,
-        })});
-        showToast('success', 'Creado', 'Contrato creado correctamente');
-        closeContractModal();
-        await loadContratos(); renderContracts();
-    } catch (e) { showToast('error', 'Error', e.message); }
-    finally { showLoading(false); }
-}
-
-async function deleteContract(id) {
-    if (!confirm('¿Eliminar este contrato?')) return;
-    showLoading(true);
-    try {
-        await apiFetch(`/api/contratos/${id}`, { method: 'DELETE' });
-        showToast('success', 'Eliminado', 'Contrato eliminado');
-        await loadContratos(); renderContracts();
-    } catch (e) { showToast('error', 'Error', e.message); }
-    finally { showLoading(false); }
-}
+// function openContractModal() {
+//     document.getElementById('contractCompany').innerHTML =
+//         companies.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+//     const today = new Date().toISOString().split('T')[0];
+//     const next  = new Date(); next.setFullYear(next.getFullYear() + 1);
+//     document.getElementById('contractStart').value  = today;
+//     document.getElementById('contractEnd').value    = next.toISOString().split('T')[0];
+//     document.getElementById('contractValue').value  = '';
+//     document.getElementById('contractNotes').value  = '';
+//     document.getElementById('contractModal').style.display = 'flex';
+// }
+//
+// function closeContractModal() { document.getElementById('contractModal').style.display = 'none'; }
+//
+// async function saveContract() {
+//     const empresa_id   = document.getElementById('contractCompany').value;
+//     const tipo         = document.getElementById('contractType').value;
+//     const fecha_inicio = document.getElementById('contractStart').value;
+//     const fecha_fin    = document.getElementById('contractEnd').value;
+//     const valor        = parseFloat(document.getElementById('contractValue').value);
+//     if (!empresa_id || !tipo || !fecha_inicio || !fecha_fin || isNaN(valor)) {
+//         showToast('error', 'Error', 'Completa todos los campos obligatorios'); return;
+//     }
+//     showLoading(true);
+//     try {
+//         await apiFetch('/api/contratos', { method: 'POST', body: JSON.stringify({
+//             empresa_id, tipo, fecha_inicio, fecha_fin, valor, estado: 'Activo',
+//             notas: document.getElementById('contractNotes').value || null,
+//         })});
+//         showToast('success', 'Creado', 'Contrato creado correctamente');
+//         closeContractModal();
+//         await loadContratos(); renderContracts();
+//     } catch (e) { showToast('error', 'Error', e.message); }
+//     finally { showLoading(false); }
+// }
+//
+// async function deleteContract(id) {
+//     if (!confirm('¿Eliminar este contrato?')) return;
+//     showLoading(true);
+//     try {
+//         await apiFetch(`/api/contratos/${id}`, { method: 'DELETE' });
+//         showToast('success', 'Eliminado', 'Contrato eliminado');
+//         await loadContratos(); renderContracts();
+//     } catch (e) { showToast('error', 'Error', e.message); }
+//     finally { showLoading(false); }
+// }
 
 // ============================================
-// FACTURAS — CRUD
+// FACTURAS — CRUD (DESACTIVADO)
 // ============================================
-function openInvoiceModal() {
-    document.getElementById('invoiceCompany').innerHTML =
-        companies.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
-    const today = new Date().toISOString().split('T')[0];
-    const t30 = new Date(); t30.setDate(t30.getDate() + 30);
-    document.getElementById('invoiceNumber').value  = '';
-    document.getElementById('invoiceAmount').value  = '';
-    document.getElementById('invoiceDate').value    = today;
-    document.getElementById('invoiceDueDate').value = t30.toISOString().split('T')[0];
-    document.getElementById('invoiceStatus').value  = 'Pendiente';
-    document.getElementById('invoiceModal').style.display = 'flex';
-}
-
-function closeInvoiceModal() { document.getElementById('invoiceModal').style.display = 'none'; }
-
-async function saveInvoice() {
-    const numero    = document.getElementById('invoiceNumber').value.trim();
-    const empresa_id= document.getElementById('invoiceCompany').value;
-    const fecha     = document.getElementById('invoiceDate').value;
-    const fecha_vencimiento = document.getElementById('invoiceDueDate').value;
-    const importe   = parseFloat(document.getElementById('invoiceAmount').value);
-    if (!numero || !empresa_id || !fecha || !fecha_vencimiento || isNaN(importe)) {
-        showToast('error', 'Error', 'Completa todos los campos obligatorios'); return;
-    }
-    showLoading(true);
-    try {
-        await apiFetch('/api/facturas', { method: 'POST', body: JSON.stringify({
-            numero, empresa_id, fecha, fecha_vencimiento, importe,
-            estado: document.getElementById('invoiceStatus').value,
-        })});
-        showToast('success', 'Creada', 'Factura creada correctamente');
-        closeInvoiceModal(); await loadFacturas(); renderInvoices();
-    } catch (e) { showToast('error', 'Error', e.message); }
-    finally { showLoading(false); }
-}
-
-async function deleteInvoice(id) {
-    if (!confirm('¿Eliminar esta factura?')) return;
-    showLoading(true);
-    try {
-        await apiFetch(`/api/facturas/${id}`, { method: 'DELETE' });
-        showToast('success', 'Eliminado', 'Factura eliminada');
-        await loadFacturas(); renderInvoices();
-    } catch (e) { showToast('error', 'Error', e.message); }
-    finally { showLoading(false); }
-}
+// function openInvoiceModal() {
+//     document.getElementById('invoiceCompany').innerHTML =
+//         companies.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+//     const today = new Date().toISOString().split('T')[0];
+//     const t30 = new Date(); t30.setDate(t30.getDate() + 30);
+//     document.getElementById('invoiceNumber').value  = '';
+//     document.getElementById('invoiceAmount').value  = '';
+//     document.getElementById('invoiceDate').value    = today;
+//     document.getElementById('invoiceDueDate').value = t30.toISOString().split('T')[0];
+//     document.getElementById('invoiceStatus').value  = 'Pendiente';
+//     document.getElementById('invoiceModal').style.display = 'flex';
+// }
+//
+// function closeInvoiceModal() { document.getElementById('invoiceModal').style.display = 'none'; }
+//
+// async function saveInvoice() {
+//     const numero    = document.getElementById('invoiceNumber').value.trim();
+//     const empresa_id= document.getElementById('invoiceCompany').value;
+//     const fecha     = document.getElementById('invoiceDate').value;
+//     const fecha_vencimiento = document.getElementById('invoiceDueDate').value;
+//     const importe   = parseFloat(document.getElementById('invoiceAmount').value);
+//     if (!numero || !empresa_id || !fecha || !fecha_vencimiento || isNaN(importe)) {
+//         showToast('error', 'Error', 'Completa todos los campos obligatorios'); return;
+//     }
+//     showLoading(true);
+//     try {
+//         await apiFetch('/api/facturas', { method: 'POST', body: JSON.stringify({
+//             numero, empresa_id, fecha, fecha_vencimiento, importe,
+//             estado: document.getElementById('invoiceStatus').value,
+//         })});
+//         showToast('success', 'Creada', 'Factura creada correctamente');
+//         closeInvoiceModal(); await loadFacturas(); renderInvoices();
+//     } catch (e) { showToast('error', 'Error', e.message); }
+//     finally { showLoading(false); }
+// }
+//
+// async function deleteInvoice(id) {
+//     if (!confirm('¿Eliminar esta factura?')) return;
+//     showLoading(true);
+//     try {
+//         await apiFetch(`/api/facturas/${id}`, { method: 'DELETE' });
+//         showToast('success', 'Eliminado', 'Factura eliminada');
+//         await loadFacturas(); renderInvoices();
+//     } catch (e) { showToast('error', 'Error', e.message); }
+//     finally { showLoading(false); }
+// }
 
 // ============================================
 // TICKETS — CRUD
@@ -1070,7 +1074,6 @@ function buildITContent(items, categoria, icon, fields, label, searchTerm = '') 
         const extra = item.campos_extra || {};
         let bodyHtml = '';
 
-        // Número de serie destacado (solo equipos)
         if (categoria === 'equipo' && item.numero_serie) {
             bodyHtml += `
                 <div class="it-item-row">
@@ -1102,7 +1105,6 @@ function buildITContent(items, categoria, icon, fields, label, searchTerm = '') 
             bodyHtml += `<div class="it-item-row"><span class="it-label">${k}:</span><span>${v}</span></div>`;
         });
 
-        // Título de la card: para correos mostrar nombre_cliente o correo_cliente; para el resto nombre + tipo
         const cardTitle = categoria === 'correo'
             ? `<i class="fas ${icon}"></i> ${item.nombre_cliente || item.correo_cliente || '—'}`
             : `<i class="fas ${icon}"></i> ${item.nombre}${item.tipo ? ` <small style="font-weight:400;opacity:0.65;font-size:0.82rem">(${item.tipo})</small>` : ''}`;
@@ -1250,7 +1252,6 @@ function openAddDispositivoModal(categoria) {
             </div>`,
     };
 
-    // Para correos no mostramos campos nombre/tipo genéricos
     const headerFields = categoria !== 'correo' ? `
         <div class="form-row">
             <div class="form-group">
@@ -1368,7 +1369,6 @@ async function openEditDispositivoModal(itemId, categoria) {
             </button>
         </div>`).join('');
 
-    // Para correos no mostramos campos nombre/tipo genéricos
     const headerFields = categoria !== 'correo' ? `
         <div class="form-row">
             <div class="form-group">
@@ -1555,9 +1555,9 @@ document.getElementById('searchInput').addEventListener('input',   () => { curre
 document.getElementById('statusFilter').addEventListener('change', () => { currentPage = 1; renderCompanies(); });
 document.getElementById('serviceFilter').addEventListener('change',() => { currentPage = 1; renderCompanies(); });
 
-document.getElementById('addCompanyBtn').addEventListener('click',  () => openCompanyModal());
-document.getElementById('addContractBtn').addEventListener('click', openContractModal);
-document.getElementById('addInvoiceBtn').addEventListener('click',  openInvoiceModal);
+document.getElementById('addCompanyBtn').addEventListener('click', () => openCompanyModal());
+// document.getElementById('addContractBtn').addEventListener('click', openContractModal); // DESACTIVADO — Contratos
+// document.getElementById('addInvoiceBtn').addEventListener('click',  openInvoiceModal);  // DESACTIVADO — Facturas
 document.getElementById('addTicketBtn').addEventListener('click',   openTicketModal);
 
 // Cerrar modal al hacer clic en el fondo
