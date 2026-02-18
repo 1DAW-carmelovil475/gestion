@@ -17,7 +17,6 @@
         <span class="logo-text">Hola Informática</span>
     </div>
 
-    <!-- FIX: clase correcta es top-nav, no top-nav-desktop -->
     <nav class="top-nav">
         <a href="#empresas" class="nav-link active" data-section="empresas">
             <i class="fas fa-building"></i> Empresas
@@ -60,9 +59,7 @@
             <button class="btn-secondary" onclick="importExcel()">
                 <i class="fas fa-file-import"></i> Importar Excel
             </button>
-
             <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none">
-
             <button id="addCompanyBtn" class="btn-primary">
                 <i class="fas fa-plus"></i> Nueva Empresa
             </button>
@@ -441,6 +438,20 @@
     </div>
 </div>
 
+<!-- MODAL: DETALLE CONTRATO -->
+<div class="modal" id="contractDetailModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-file-contract" style="color:var(--primary);margin-right:8px"></i> Detalle del Contrato</h2>
+            <button class="modal-close" onclick="document.getElementById('contractDetailModal').style.display='none'"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="contractDetailBody"></div>
+        <div class="modal-buttons">
+            <button class="btn-secondary" onclick="document.getElementById('contractDetailModal').style.display='none'">Cerrar</button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL: FACTURA -->
 <div class="modal" id="invoiceModal">
     <div class="modal-content">
@@ -483,6 +494,20 @@
         <div class="modal-buttons">
             <button class="btn-primary" onclick="saveInvoice()"><i class="fas fa-save"></i> Guardar</button>
             <button class="btn-secondary" onclick="closeInvoiceModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: DETALLE FACTURA -->
+<div class="modal" id="invoiceDetailModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-file-invoice-dollar" style="color:var(--primary);margin-right:8px"></i> Detalle de Factura</h2>
+            <button class="modal-close" onclick="document.getElementById('invoiceDetailModal').style.display='none'"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="invoiceDetailBody"></div>
+        <div class="modal-buttons">
+            <button class="btn-secondary" onclick="document.getElementById('invoiceDetailModal').style.display='none'">Cerrar</button>
         </div>
     </div>
 </div>
@@ -534,6 +559,20 @@
     </div>
 </div>
 
+<!-- MODAL: DETALLE TICKET -->
+<div class="modal" id="ticketDetailModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-headset" style="color:var(--primary);margin-right:8px"></i> Detalle del Ticket</h2>
+            <button class="modal-close" onclick="document.getElementById('ticketDetailModal').style.display='none'"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="ticketDetailBody"></div>
+        <div class="modal-buttons">
+            <button class="btn-secondary" onclick="document.getElementById('ticketDetailModal').style.display='none'">Cerrar</button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL: INFRAESTRUCTURA IT -->
 <div class="modal" id="itInfraModal">
     <div class="modal-content modal-large">
@@ -553,7 +592,6 @@
 </div>
 
 <!-- MODAL: AÑADIR ITEM IT -->
-<!-- FIX: añadido onclick en el botón guardar -->
 <div class="modal" id="itItemModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -564,7 +602,6 @@
             <form id="itItemForm" onsubmit="return false;"></form>
         </div>
         <div class="modal-buttons">
-            <!-- FIX: onclick añadido -->
             <button class="btn-primary" id="saveITItemBtn" onclick="saveITItem()">
                 <i class="fas fa-save"></i> Guardar
             </button>
@@ -576,7 +613,6 @@
 <!-- TOAST -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- FIX: config.js cargado antes que el script principal -->
 <script src="./js/config.js"></script>
 <script>
 (function() {

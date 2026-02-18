@@ -4,8 +4,6 @@
 // xlsx se carga globalmente desde CDN en el HTML
 // ============================================
 
-
-
 let companies  = [];
 let contracts  = [];
 let invoices   = [];
@@ -13,6 +11,7 @@ let tickets    = [];
 let currentPage = 1;
 const itemsPerPage = 10;
 let currentCompanyId = null;
+let itSearchTerm = '';
 
 // ============================================
 // INICIALIZACIÓN
@@ -156,14 +155,14 @@ function renderContracts() {
         return;
     }
     table.innerHTML = contracts.map(c => `
-        <tr>
+        <tr style="cursor:pointer" onclick="viewContractDetail('${c.id}')">
             <td><strong>${c.empresas?.nombre || '—'}</strong></td>
             <td>${c.tipo}</td>
             <td>${formatDate(c.fecha_inicio)}</td>
             <td>${formatDate(c.fecha_fin)}</td>
             <td><strong>${parseFloat(c.valor || 0).toLocaleString('es-ES')}€</strong></td>
             <td><span class="status ${(c.estado||'').replace(/ /g,'-')}">${c.estado}</span></td>
-            <td>
+            <td onclick="event.stopPropagation()">
                 <button class="btn-action btn-delete" onclick="deleteContract('${c.id}')" title="Eliminar">
                     <i class="fas fa-trash"></i>
                 </button>
@@ -183,13 +182,13 @@ function renderInvoices() {
         return;
     }
     table.innerHTML = invoices.map(f => `
-        <tr>
+        <tr style="cursor:pointer" onclick="viewInvoiceDetail('${f.id}')">
             <td><strong>${f.numero}</strong></td>
             <td>${f.empresas?.nombre || '—'}</td>
             <td>${formatDate(f.fecha)}</td>
             <td><strong>${parseFloat(f.importe || 0).toFixed(2)}€</strong></td>
             <td><span class="status ${f.estado}">${f.estado}</span></td>
-            <td>
+            <td onclick="event.stopPropagation()">
                 <button class="btn-action btn-delete" onclick="deleteInvoice('${f.id}')" title="Eliminar">
                     <i class="fas fa-trash"></i>
                 </button>
@@ -209,19 +208,193 @@ function renderTickets() {
         return;
     }
     table.innerHTML = tickets.map(t => `
-        <tr>
+        <tr style="cursor:pointer" onclick="viewTicketDetail('${t.id}')">
             <td><strong>#${(t.id || '').substring(0,8)}</strong></td>
             <td>${t.empresas?.nombre || '—'}</td>
             <td>${t.asunto}</td>
             <td><span class="status Prioridad-${t.prioridad}">${t.prioridad}</span></td>
             <td><span class="status ${(t.estado||'').replace(/ /g,'-')}">${t.estado}</span></td>
             <td>${formatDate(t.created_at)}</td>
-            <td>
+            <td onclick="event.stopPropagation()">
                 <button class="btn-action btn-edit"   onclick="changeTicketStatus('${t.id}','${t.estado}')" title="Cambiar estado"><i class="fas fa-exchange-alt"></i></button>
                 <button class="btn-action btn-delete" onclick="deleteTicket('${t.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
             </td>
         </tr>`).join('');
     updateTicketStats();
+}
+
+// ============================================
+// MODALES DE DETALLE — CONTRATOS / FACTURAS / TICKETS
+// ============================================
+function viewContractDetail(id) {
+    const c = contracts.find(x => x.id === id);
+    if (!c) return;
+
+    const today = new Date();
+    const endDate = new Date(c.fecha_fin);
+    const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+    let daysLeftHtml = '';
+    if (c.estado === 'Activo') {
+        if (daysLeft < 0) {
+            daysLeftHtml = `<span style="color:#dc2626;font-weight:600">Vencido hace ${Math.abs(daysLeft)} días</span>`;
+        } else if (daysLeft <= 30) {
+            daysLeftHtml = `<span style="color:#d97706;font-weight:600">Vence en ${daysLeft} días ⚠️</span>`;
+        } else {
+            daysLeftHtml = `<span style="color:#16a34a;font-weight:600">${daysLeft} días restantes</span>`;
+        }
+    }
+
+    showGenericDetailModal({
+        icon: 'fa-file-contract',
+        iconColor: '#2563eb',
+        iconBg: '#dbeafe',
+        title: `Contrato — ${c.empresas?.nombre || '—'}`,
+        subtitle: c.tipo,
+        fields: [
+            { label: 'Empresa',      value: c.empresas?.nombre || '—' },
+            { label: 'Tipo',         value: c.tipo },
+            { label: 'Estado',       value: c.estado, badge: true },
+            { label: 'Fecha Inicio', value: formatDate(c.fecha_inicio) },
+            { label: 'Fecha Fin',    value: formatDate(c.fecha_fin) },
+            { label: 'Vigencia',     value: daysLeftHtml, raw: true },
+            { label: 'Valor Anual',  value: `${parseFloat(c.valor || 0).toLocaleString('es-ES')}€`, highlight: true },
+        ],
+        notes: c.notas,
+    });
+}
+
+function viewInvoiceDetail(id) {
+    const f = invoices.find(x => x.id === id);
+    if (!f) return;
+
+    showGenericDetailModal({
+        icon: 'fa-file-invoice-dollar',
+        iconColor: '#16a34a',
+        iconBg: '#dcfce7',
+        title: `Factura ${f.numero}`,
+        subtitle: f.empresas?.nombre || '—',
+        fields: [
+            { label: 'Nº Factura',      value: f.numero },
+            { label: 'Empresa',         value: f.empresas?.nombre || '—' },
+            { label: 'Estado',          value: f.estado, badge: true },
+            { label: 'Fecha Emisión',   value: formatDate(f.fecha) },
+            { label: 'Fecha Vencimiento', value: formatDate(f.fecha_vencimiento) },
+            { label: 'Importe',         value: `${parseFloat(f.importe || 0).toFixed(2)}€`, highlight: true },
+        ],
+        notes: f.notas,
+    });
+}
+
+function viewTicketDetail(id) {
+    const t = tickets.find(x => x.id === id);
+    if (!t) return;
+
+    showGenericDetailModal({
+        icon: 'fa-headset',
+        iconColor: '#d97706',
+        iconBg: '#fef3c7',
+        title: `Ticket #${(t.id || '').substring(0,8)}`,
+        subtitle: t.asunto,
+        fields: [
+            { label: 'Empresa',    value: t.empresas?.nombre || '—' },
+            { label: 'Asunto',     value: t.asunto },
+            { label: 'Prioridad',  value: t.prioridad, badge: true },
+            { label: 'Estado',     value: t.estado, badge: true },
+            { label: 'Fecha',      value: formatDate(t.created_at) },
+        ],
+        extraSection: t.descripcion ? {
+            label: 'Descripción',
+            content: t.descripcion,
+        } : null,
+        notes: t.notas,
+    });
+}
+
+function showGenericDetailModal({ icon, iconColor, iconBg, title, subtitle, fields, notes, extraSection }) {
+    // Remove existing detail modal if any
+    const existing = document.getElementById('genericDetailModal');
+    if (existing) existing.remove();
+
+    const badgeClass = val => {
+        const map = {
+            'Activo': 'Activo', 'Activo': 'Activo',
+            'Suspendido': 'Suspendido', 'En revisión': 'En-revisión',
+            'Pagada': 'Pagada', 'Pendiente': 'Pendiente', 'Vencida': 'Vencida',
+            'Abierto': 'Abierto', 'En proceso': 'En-proceso', 'Cerrado': 'Cerrado',
+            'Baja': 'Baja', 'Media': 'Media', 'Alta': 'Alta', 'Urgente': 'Urgente',
+        };
+        return map[val] || val;
+    };
+
+    const fieldsHtml = fields.map(f => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9">
+            <span style="font-size:0.83rem;color:#64748b;font-weight:500;min-width:130px">${f.label}</span>
+            ${f.raw
+                ? `<span>${f.value}</span>`
+                : f.badge
+                    ? `<span class="status ${badgeClass(f.value)}">${f.value}</span>`
+                    : f.highlight
+                        ? `<span style="font-weight:700;font-size:1.05rem;color:#1e293b">${f.value}</span>`
+                        : `<span style="font-weight:500;color:#1e293b">${f.value}</span>`
+            }
+        </div>`).join('');
+
+    const extraHtml = extraSection ? `
+        <div style="margin-top:18px">
+            <div style="font-size:0.82rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">${extraSection.label}</div>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;color:#374151;font-size:0.92rem;line-height:1.6">${extraSection.content}</div>
+        </div>` : '';
+
+    const notesHtml = `
+        <div style="margin-top:18px">
+            <div style="font-size:0.82rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">
+                <i class="fas fa-sticky-note" style="margin-right:5px;color:#94a3b8"></i>Notas
+            </div>
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px;color:${notes ? '#374151' : '#94a3b8'};font-size:0.92rem;line-height:1.6;font-style:${notes ? 'normal' : 'italic'}">
+                ${notes || 'Sin nota'}
+            </div>
+        </div>`;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'genericDetailModal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width:520px;width:100%">
+            <div class="modal-header" style="border-bottom:none;padding-bottom:0">
+                <div style="display:flex;align-items:center;gap:14px">
+                    <div style="width:46px;height:46px;border-radius:12px;background:${iconBg};color:${iconColor};display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div>
+                        <h2 style="margin:0;font-size:1.1rem;color:#1e293b">${title}</h2>
+                        <p style="margin:2px 0 0;font-size:0.85rem;color:#64748b">${subtitle}</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="document.getElementById('genericDetailModal').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding-top:16px">
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:6px 16px">
+                    ${fieldsHtml}
+                </div>
+                ${extraHtml}
+                ${notesHtml}
+            </div>
+            <div class="modal-buttons" style="border-top:1px solid #f1f5f9;margin-top:4px">
+                <button class="btn-secondary" onclick="document.getElementById('genericDetailModal').remove()">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
+        </div>`;
+
+    // Close on backdrop click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+    });
+
+    document.body.appendChild(modal);
 }
 
 // ============================================
@@ -272,24 +445,14 @@ function exportToExcel() {
         Teléfono: c.telefono || '',
         Dirección: c.direccion || '',
         Estado: c.estado || '',
-        Servicios: Array.isArray(c.servicios)
-            ? c.servicios.join(', ')
-            : ''
+        Servicios: Array.isArray(c.servicios) ? c.servicios.join(', ') : ''
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Empresas");
-
-    const wbout = XLSX.write(workbook, {
-        bookType: 'xlsx',
-        type: 'array'
-    });
-
-    const blob = new Blob([wbout], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    });
-
+    const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -298,14 +461,12 @@ function exportToExcel() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
     showToast('success', 'Exportado', `${companies.length} empresas exportadas`);
 }
 
 // ============================================
 // IMPORTAR EXCEL
 // ============================================
-
 function importExcel() {
     document.getElementById('excelFileInput').click();
 }
@@ -315,26 +476,16 @@ document.getElementById('excelFileInput').addEventListener('change', handleExcel
 function handleExcelImport(event) {
     const file = event.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
-
     reader.onload = async function (e) {
         try {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
-
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
-
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-            if (!jsonData.length) {
-                showToast('warning', 'Vacío', 'El archivo no contiene datos');
-                return;
-            }
-
+            if (!jsonData.length) { showToast('warning', 'Vacío', 'El archivo no contiene datos'); return; }
             showLoading(true);
-
             for (const row of jsonData) {
                 const payload = {
                     nombre: row['Nombre'] || '',
@@ -343,24 +494,14 @@ function handleExcelImport(event) {
                     telefono: row['Teléfono'] || null,
                     direccion: row['Dirección'] || null,
                     estado: row['Estado'] || 'Activo',
-                    servicios: row['Servicios']
-                        ? row['Servicios'].split(',').map(s => s.trim())
-                        : []
+                    servicios: row['Servicios'] ? row['Servicios'].split(',').map(s => s.trim()) : []
                 };
-
                 if (!payload.nombre || !payload.cif) continue;
-
-                await apiFetch('/api/empresas', {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
+                await apiFetch('/api/empresas', { method: 'POST', body: JSON.stringify(payload) });
             }
-
             showToast('success', 'Importado', `${jsonData.length} empresas importadas`);
-
             await loadEmpresas();
             renderCompanies();
-
         } catch (err) {
             console.error(err);
             showToast('error', 'Error', 'No se pudo importar el archivo');
@@ -369,11 +510,8 @@ function handleExcelImport(event) {
             event.target.value = '';
         }
     };
-
     reader.readAsArrayBuffer(file);
 }
-
-
 
 // ============================================
 // EMPRESAS — CRUD
@@ -405,10 +543,8 @@ function openCompanyModal(company = null) {
         document.querySelectorAll('input[name="services"]').forEach(cb => cb.checked = false);
     }
 
-    // Reset pestañas a la primera
     document.querySelectorAll('#companyForm .form-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
     document.querySelectorAll('#companyForm .form-tab-content').forEach((t, i) => t.classList.toggle('active', i === 0));
-
     modal.style.display = 'flex';
 }
 
@@ -700,6 +836,7 @@ async function deleteTicket(id) {
 // ============================================
 function viewCompany(id) {
     currentCompanyId = id;
+    itSearchTerm = '';
     const company = companies.find(c => c.id === id);
     if (!company) return;
 
@@ -713,6 +850,7 @@ function viewCompany(id) {
 function closeITModal() {
     document.getElementById('itInfraModal').style.display = 'none';
     currentCompanyId = null;
+    itSearchTerm = '';
 }
 
 function setupITTabs() {
@@ -720,6 +858,7 @@ function setupITTabs() {
         tab.addEventListener('click', function () {
             document.querySelectorAll('.it-tab').forEach(t => t.classList.remove('active'));
             this.classList.add('active');
+            itSearchTerm = '';
             if (!currentCompanyId) return;
             const map = {
                 equipos:    () => renderEquipos(currentCompanyId),
@@ -738,6 +877,46 @@ async function getDispositivos(empresaId, categoria) {
     return apiFetch(`/api/dispositivos?empresa_id=${empresaId}&categoria=${categoria}`);
 }
 
+// ============================================
+// BUSCADOR IT — renderiza la barra de búsqueda
+// ============================================
+function renderITSearchBar(categoria, totalItems) {
+    return `
+        <div style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 14px;margin-bottom:18px">
+            <i class="fas fa-search" style="color:#94a3b8;font-size:0.9rem"></i>
+            <input
+                type="text"
+                id="itSearchInput"
+                placeholder="Buscar por nombre${categoria === 'equipo' ? ' o número de serie' : ''}..."
+                value="${itSearchTerm}"
+                oninput="handleITSearch(this.value, '${categoria}')"
+                style="border:none;background:none;outline:none;font-size:0.92rem;color:#1e293b;width:100%;font-family:inherit"
+            >
+            ${itSearchTerm ? `<button onclick="clearITSearch('${categoria}')" style="border:none;background:none;color:#94a3b8;cursor:pointer;font-size:0.85rem;padding:0;display:flex;align-items:center">
+                <i class="fas fa-times-circle"></i>
+            </button>` : ''}
+            <span style="font-size:0.78rem;color:#94a3b8;white-space:nowrap;border-left:1px solid #e2e8f0;padding-left:10px;margin-left:4px">${totalItems} total</span>
+        </div>`;
+}
+
+function handleITSearch(value, categoria) {
+    itSearchTerm = value;
+    const activeTab = document.querySelector('.it-tab.active')?.dataset?.tab;
+    const map = {
+        equipos:    () => renderEquipos(currentCompanyId),
+        servidores: () => renderServidores(currentCompanyId),
+        nas:        () => renderNAS(currentCompanyId),
+        redes:      () => renderRedes(currentCompanyId),
+        licencias:  () => renderLicencias(currentCompanyId),
+    };
+    if (activeTab && map[activeTab]) map[activeTab]();
+}
+
+function clearITSearch(categoria) {
+    itSearchTerm = '';
+    handleITSearch('', categoria);
+}
+
 async function renderDispositivos(empresaId, categoria, icon, fields) {
     const container = document.getElementById('itContent');
     container.innerHTML = `<div style="text-align:center;padding:40px"><i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--primary)"></i><p style="margin-top:12px;color:var(--gray)">Cargando...</p></div>`;
@@ -748,6 +927,17 @@ async function renderDispositivos(empresaId, categoria, icon, fields) {
 
     const labelMap = { equipo: 'Equipo', servidor: 'Servidor', nas: 'NAS', red: 'Dispositivo de Red', licencia: 'Licencia' };
     const label = labelMap[categoria] || categoria;
+
+    // Filter by search term
+    let filtered = items;
+    if (itSearchTerm) {
+        const term = itSearchTerm.toLowerCase();
+        filtered = items.filter(item => {
+            const matchNombre = (item.nombre || '').toLowerCase().includes(term);
+            const matchSerie = (item.numero_serie || '').toLowerCase().includes(term);
+            return matchNombre || matchSerie;
+        });
+    }
 
     if (!items.length) {
         container.innerHTML = `
@@ -762,7 +952,7 @@ async function renderDispositivos(empresaId, categoria, icon, fields) {
     }
 
     let html = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
             <h3 style="font-size:1.05rem;color:var(--dark);display:flex;align-items:center;gap:8px">
                 <i class="fas ${icon}" style="color:var(--primary)"></i> ${label}s
                 <span style="background:#e0f2fe;color:#0369a1;padding:2px 10px;border-radius:20px;font-size:0.8rem;font-weight:600">${items.length}</span>
@@ -771,11 +961,42 @@ async function renderDispositivos(empresaId, categoria, icon, fields) {
                 <i class="fas fa-plus"></i> Añadir
             </button>
         </div>
-        <div class="it-items-grid">`;
+        ${renderITSearchBar(categoria, items.length)}`;
 
-    items.forEach(item => {
+    if (!filtered.length) {
+        html += `
+            <div style="text-align:center;padding:40px 20px;color:var(--gray)">
+                <i class="fas fa-search" style="font-size:2rem;opacity:0.25;display:block;margin-bottom:12px"></i>
+                <p style="font-size:0.95rem">No se encontraron resultados para "<strong>${itSearchTerm}</strong>"</p>
+                <button onclick="clearITSearch('${categoria}')" style="margin-top:10px;background:none;border:1px solid #e2e8f0;color:var(--primary);cursor:pointer;padding:6px 14px;border-radius:8px;font-size:0.85rem">
+                    Limpiar búsqueda
+                </button>
+            </div>`;
+        container.innerHTML = html;
+        // Restore focus & cursor
+        setTimeout(() => {
+            const inp = document.getElementById('itSearchInput');
+            if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+        }, 50);
+        return;
+    }
+
+    html += `<div class="it-items-grid">`;
+
+    filtered.forEach(item => {
         const extra = item.campos_extra || {};
-        let bodyHtml = fields.map(f => {
+        let bodyHtml = '';
+
+        // Show numero_serie prominently for equipos
+        if (categoria === 'equipo' && item.numero_serie) {
+            bodyHtml += `
+                <div class="it-item-row" style="background:#f0f9ff;border-radius:6px;padding:4px 6px;margin-bottom:4px">
+                    <span class="it-label" style="color:#0369a1">Nº Serie:</span>
+                    <span style="font-weight:600;color:#0369a1;font-family:monospace;font-size:0.88rem">${item.numero_serie}</span>
+                </div>`;
+        }
+
+        bodyHtml += fields.map(f => {
             const val = item[f.key];
             if (f.password) return `
                 <div class="it-item-row">
@@ -798,10 +1019,17 @@ async function renderDispositivos(empresaId, categoria, icon, fields) {
             bodyHtml += `<div class="it-item-row"><span class="it-label">${k}:</span><span>${v}</span></div>`;
         });
 
+        // Highlight search match in card name
+        let nombreDisplay = item.nombre;
+        if (itSearchTerm) {
+            const re = new RegExp(`(${itSearchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            nombreDisplay = item.nombre.replace(re, '<mark style="background:#fef08a;border-radius:2px;padding:0 1px">$1</mark>');
+        }
+
         html += `
             <div class="it-item-card">
                 <div class="it-item-header">
-                    <h4><i class="fas ${icon}"></i> ${item.nombre}${item.tipo ? ` <small style="font-weight:400;opacity:0.65;font-size:0.85rem">(${item.tipo})</small>` : ''}</h4>
+                    <h4><i class="fas ${icon}"></i> <span>${nombreDisplay}</span>${item.tipo ? ` <small style="font-weight:400;opacity:0.65;font-size:0.85rem">(${item.tipo})</small>` : ''}</h4>
                     <button class="btn-action btn-delete" onclick="deleteDispositivo('${item.id}','${categoria}')" title="Eliminar" style="margin:0">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -811,6 +1039,12 @@ async function renderDispositivos(empresaId, categoria, icon, fields) {
     });
 
     container.innerHTML = html + '</div>';
+
+    // Restore focus after re-render
+    setTimeout(() => {
+        const inp = document.getElementById('itSearchInput');
+        if (inp && itSearchTerm) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+    }, 50);
 }
 
 const CAMPOS = {
@@ -890,8 +1124,17 @@ function openAddDispositivoModal(categoria) {
 
     const sugerencias = (TIPO_SUGERENCIAS[categoria] || []).map(s => `<option value="${s}">`).join('');
 
+    // Número de serie field — only for equipos, required
+    const numSerieField = categoria === 'equipo' ? `
+        <div class="form-group">
+            <label>Número de Serie <span style="color:#dc2626">*</span></label>
+            <input type="text" id="fi-num-serie" placeholder="Ej: SN-2024-ABC123" required
+                style="font-family:monospace;letter-spacing:0.03em">
+        </div>` : '';
+
     const camposEspecificos = {
         equipo: `
+            ${numSerieField}
             <div class="form-row">
                 <div class="form-group"><label>IP</label><input type="text" id="fi-ip" placeholder="192.168.1.10"></div>
                 <div class="form-group"><label>AnyDesk ID</label><input type="text" id="fi-anydesk" placeholder="123456789"></div>
@@ -938,13 +1181,12 @@ function openAddDispositivoModal(categoria) {
             </div>`,
     };
 
-    // FIX: el formulario va dentro de .modal-body para scroll correcto
     const modalBody = document.querySelector('#itItemModal .modal-body');
     modalBody.innerHTML = `
         <form id="itItemForm" onsubmit="return false;">
             <div class="form-row">
                 <div class="form-group">
-                    <label>Nombre *</label>
+                    <label>Nombre <span style="color:#dc2626">*</span></label>
                     <input type="text" id="fi-nombre" placeholder="Nombre del dispositivo" required>
                 </div>
                 <div class="form-group">
@@ -992,6 +1234,16 @@ async function saveITItem() {
     const nombre    = document.getElementById('fi-nombre')?.value?.trim();
     if (!nombre) { showToast('error', 'Error', 'El nombre es obligatorio'); return; }
 
+    // Validate numero_serie for equipos
+    if (categoria === 'equipo') {
+        const numSerie = document.getElementById('fi-num-serie')?.value?.trim();
+        if (!numSerie) {
+            showToast('error', 'Error', 'El número de serie es obligatorio para equipos');
+            document.getElementById('fi-num-serie')?.focus();
+            return;
+        }
+    }
+
     const g = id => document.getElementById(id)?.value?.trim() || null;
 
     const campos_extra = {};
@@ -1016,6 +1268,7 @@ async function saveITItem() {
         num_usuarios:      g('fi-num-usuarios') ? parseInt(g('fi-num-usuarios')) : null,
         vencimiento:       g('fi-vencimiento'),
         clave_licencia:    g('fi-clave'),
+        numero_serie:      g('fi-num-serie'),
         campos_extra:      Object.keys(campos_extra).length ? campos_extra : {},
     };
 
