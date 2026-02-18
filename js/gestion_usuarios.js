@@ -670,7 +670,6 @@ async function saveCompany() {
         closeCompanyModal();
         await loadEmpresas();
         renderCompanies();
-        // Si estamos en el detalle, refrescar
         if (id && currentCompanyId === id) {
             renderEmpresaDetalle(id);
         }
@@ -696,7 +695,6 @@ async function deleteCompany(id) {
         showToast('success', 'Eliminado', 'Empresa eliminada');
         await loadEmpresas();
         renderCompanies();
-        // Si estamos viendo esa empresa, volver
         if (currentCompanyId === id) volverAEmpresas();
     } catch (e) {
         showToast('error', 'Error', e.message);
@@ -888,14 +886,13 @@ async function deleteTicket(id) {
 }
 
 // ============================================
-// EMPRESA DETALLE — PÁGINA COMPLETA (reemplaza modal IT)
+// EMPRESA DETALLE — PÁGINA COMPLETA
 // ============================================
 function viewCompany(id) {
     currentCompanyId = id;
     const company = companies.find(c => c.id === id);
     if (!company) return;
 
-    // Guardar sección anterior para el botón volver
     const activeSection = document.querySelector('.content-section.active');
     if (activeSection && activeSection.id !== 'empresa-detalle') {
         previousSection = activeSection.id;
@@ -909,14 +906,11 @@ function renderEmpresaDetalle(id) {
     const company = companies.find(c => c.id === id);
     if (!company) return;
 
-    // Título
     document.getElementById('empresaDetalleTitulo').innerHTML =
         `<i class="fas fa-building"></i> ${company.nombre}`;
 
-    // Botón editar
     document.getElementById('empresaDetalleEditBtn').onclick = () => editCompany(id);
 
-    // Info grid
     const grid = document.getElementById('empresaInfoGrid');
     const serviciosHtml = (company.servicios || []).length
         ? `<div class="services-tags">${(company.servicios).map(s => `<span class="service-tag">${s}</span>`).join('')}</div>`
@@ -949,7 +943,6 @@ function renderEmpresaDetalle(id) {
         </div>
     `;
 
-    // Activar primera pestaña IT
     document.querySelectorAll('#itTabsPage .it-tab').forEach(t => t.classList.remove('active'));
     const firstTab = document.querySelector('#itTabsPage .it-tab[data-tab="equipos"]');
     if (firstTab) firstTab.classList.add('active');
@@ -960,10 +953,7 @@ function renderEmpresaDetalle(id) {
 function navigateToDetalle() {
     document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
     document.getElementById('empresa-detalle').classList.add('active');
-
-    // Desmarcar nav links
     document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(l => l.classList.remove('active'));
-
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -986,7 +976,7 @@ function setupITTabs() {
                 servidores: () => renderServidores(currentCompanyId),
                 nas:        () => renderNAS(currentCompanyId),
                 redes:      () => renderRedes(currentCompanyId),
-                licencias:  () => renderLicencias(currentCompanyId),
+                correos:    () => renderCorreos(currentCompanyId),
                 otros:      () => renderOtros(currentCompanyId),
             };
             const fn = map[this.getAttribute('data-tab')];
@@ -1011,7 +1001,7 @@ async function renderDispositivos(empresaId, categoria, icon, fields) {
     }
 
     itItemsCache = items;
-    const labelMap = { equipo: 'Equipo', servidor: 'Servidor', nas: 'NAS', red: 'Dispositivo de Red', licencia: 'Licencia', otro: 'Elemento' };
+    const labelMap = { equipo: 'Equipo', servidor: 'Servidor', nas: 'NAS', red: 'Dispositivo de Red', correo: 'Correo', otro: 'Elemento' };
     buildITContent(items, categoria, icon, fields, labelMap[categoria] || categoria);
 }
 
@@ -1020,16 +1010,23 @@ function buildITContent(items, categoria, icon, fields, label, searchTerm = '') 
 
     const filtered = searchTerm
         ? items.filter(item =>
-            (item.nombre || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.nombre_cliente || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.correo_cliente || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
             (item.numero_serie || '').toLowerCase().includes(searchTerm.toLowerCase()))
         : items;
+
+    const searchPlaceholder = categoria === 'correos'
+        ? 'Buscar por nombre de cliente o correo...'
+        : categoria === 'equipo'
+            ? 'Buscar por nombre o número de serie...'
+            : 'Buscar por nombre...';
 
     const searchBar = `
         <div class="it-search-bar">
             <div class="it-search-box">
                 <i class="fas fa-search"></i>
                 <input type="text" id="itSearchInput"
-                    placeholder="Buscar por nombre${categoria === 'equipo' ? ' o número de serie' : ''}..."
+                    placeholder="${searchPlaceholder}"
                     value="${searchTerm}"
                     oninput="handleITSearch(event,'${categoria}','${icon}','${label}')">
             </div>
@@ -1105,10 +1102,15 @@ function buildITContent(items, categoria, icon, fields, label, searchTerm = '') 
             bodyHtml += `<div class="it-item-row"><span class="it-label">${k}:</span><span>${v}</span></div>`;
         });
 
+        // Título de la card: para correos mostrar nombre_cliente o correo_cliente; para el resto nombre + tipo
+        const cardTitle = categoria === 'correo'
+            ? `<i class="fas ${icon}"></i> ${item.nombre_cliente || item.correo_cliente || '—'}`
+            : `<i class="fas ${icon}"></i> ${item.nombre}${item.tipo ? ` <small style="font-weight:400;opacity:0.65;font-size:0.82rem">(${item.tipo})</small>` : ''}`;
+
         html += `
             <div class="it-item-card">
                 <div class="it-item-header">
-                    <h4><i class="fas ${icon}"></i> ${item.nombre}${item.tipo ? ` <small style="font-weight:400;opacity:0.65;font-size:0.82rem">(${item.tipo})</small>` : ''}</h4>
+                    <h4>${cardTitle}</h4>
                     <div style="display:flex;gap:4px;flex-shrink:0">
                         <button class="btn-action btn-edit" onclick="openEditDispositivoModal('${item.id}','${categoria}')" title="Editar" style="margin:0;padding:7px 10px">
                             <i class="fas fa-edit"></i>
@@ -1132,8 +1134,11 @@ function handleITSearch(event, categoria, icon, label) {
     buildITContent(itItemsCache, categoria, icon, CAMPOS[categoria] || [], label, event.target.value);
 }
 
+// ============================================
+// CONFIGURACIÓN DE CAMPOS POR CATEGORÍA
+// ============================================
 const CAMPOS = {
-    equipo:   [
+    equipo: [
         { key:'tipo',      label:'Tipo' },
         { key:'usuario',   label:'Usuario' },
         { key:'password',  label:'Contraseña', password:true },
@@ -1161,29 +1166,129 @@ const CAMPOS = {
         { key:'password', label:'Contraseña', password:true },
         { key:'modelo',   label:'Modelo' },
     ],
-    licencia: [
-        { key:'tipo',           label:'Tipo' },
-        { key:'software',       label:'Software' },
-        { key:'num_usuarios',   label:'Usuarios' },
-        { key:'vencimiento',    label:'Vencimiento' },
-        { key:'clave_licencia', label:'Clave', password:true },
+    correo: [
+        { key:'correo_cliente',   label:'Correo' },
+        { key:'password_cliente', label:'Contraseña', password:true },
     ],
 };
 
-const ICONOS = { equipo:'fa-desktop', servidor:'fa-server', nas:'fa-hdd', red:'fa-network-wired', licencia:'fa-key' };
+const ICONOS = {
+    equipo:   'fa-desktop',
+    servidor: 'fa-server',
+    nas:      'fa-hdd',
+    red:      'fa-network-wired',
+    correo:   'fa-envelope',
+};
 
 function renderEquipos(id)    { renderDispositivos(id, 'equipo',   ICONOS.equipo,   CAMPOS.equipo); }
 function renderServidores(id) { renderDispositivos(id, 'servidor', ICONOS.servidor, CAMPOS.servidor); }
 function renderNAS(id)        { renderDispositivos(id, 'nas',      ICONOS.nas,      CAMPOS.nas); }
 function renderRedes(id)      { renderDispositivos(id, 'red',      ICONOS.red,      CAMPOS.red); }
-function renderLicencias(id)  { renderDispositivos(id, 'licencia', ICONOS.licencia, CAMPOS.licencia); }
+function renderCorreos(id)    { renderDispositivos(id, 'correo',   ICONOS.correo,   CAMPOS.correo); }
 function renderOtros(id)      { renderDispositivos(id, 'otro',     'fa-boxes',      []); }
+
+// ============================================
+// AÑADIR DISPOSITIVO
+// ============================================
+function openAddDispositivoModal(categoria) {
+    const labelMap = { equipo:'Equipo', servidor:'Servidor', nas:'NAS', red:'Dispositivo de Red', correo:'Correo', otro:'Elemento' };
+    document.getElementById('itItemModalTitle').textContent = `Añadir ${labelMap[categoria] || categoria}`;
+    document.getElementById('itItemModal').dataset.categoria = categoria;
+    delete document.getElementById('itItemModal').dataset.editId;
+
+    const sugerencias = (TIPO_SUGERENCIAS[categoria] || []).map(s => `<option value="${s}">`).join('');
+
+    const camposEspecificos = {
+        equipo: `
+            <div class="form-group">
+                <label>Número de Serie *</label>
+                <input type="text" id="fi-serie" placeholder="Ej: SN-2024-ABC123" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>IP</label><input type="text" id="fi-ip" placeholder="192.168.1.10"></div>
+                <div class="form-group"><label>AnyDesk ID</label><input type="text" id="fi-anydesk" placeholder="123456789"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Usuario</label><input type="text" id="fi-usuario" placeholder="admin"></div>
+                <div class="form-group"><label>Contraseña</label><input type="text" id="fi-password" placeholder="••••••••"></div>
+            </div>`,
+        servidor: `
+            <div class="form-row">
+                <div class="form-group"><label>IP</label><input type="text" id="fi-ip" placeholder="192.168.1.5"></div>
+                <div class="form-group"><label>S.O.</label><input type="text" id="fi-so" placeholder="Windows Server 2022"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Usuario</label><input type="text" id="fi-usuario" placeholder="admin"></div>
+                <div class="form-group"><label>Contraseña</label><input type="text" id="fi-password" placeholder="••••••••"></div>
+            </div>`,
+        nas: `
+            <div class="form-row">
+                <div class="form-group"><label>IP</label><input type="text" id="fi-ip" placeholder="192.168.1.20"></div>
+                <div class="form-group"><label>Capacidad</label><input type="text" id="fi-capacidad" placeholder="4TB"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Usuario</label><input type="text" id="fi-usuario" placeholder="admin"></div>
+                <div class="form-group"><label>Contraseña</label><input type="text" id="fi-password" placeholder="••••••••"></div>
+            </div>`,
+        red: `
+            <div class="form-row">
+                <div class="form-group"><label>IP</label><input type="text" id="fi-ip" placeholder="192.168.1.1"></div>
+                <div class="form-group"><label>Modelo</label><input type="text" id="fi-modelo" placeholder="Cisco RV340"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Usuario</label><input type="text" id="fi-usuario" placeholder="admin"></div>
+                <div class="form-group"><label>Contraseña</label><input type="text" id="fi-password" placeholder="••••••••"></div>
+            </div>`,
+        correo: `
+            <div class="form-group">
+                <label>Nombre del cliente</label>
+                <input type="text" id="fi-nombre-correo-cliente" placeholder="Juan García">
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Correo</label><input type="email" id="fi-correo-cliente" placeholder="juan@empresa.com"></div>
+                <div class="form-group"><label>Contraseña</label><input type="text" id="fi-password-correo-cliente" placeholder="••••••••"></div>
+            </div>`,
+    };
+
+    // Para correos no mostramos campos nombre/tipo genéricos
+    const headerFields = categoria !== 'correo' ? `
+        <div class="form-row">
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" id="fi-nombre" placeholder="Nombre del dispositivo" required>
+            </div>
+            <div class="form-group">
+                <label>Tipo</label>
+                <input type="text" id="fi-tipo" placeholder="Selecciona o escribe..." list="fi-tipo-list">
+                <datalist id="fi-tipo-list">${sugerencias}</datalist>
+            </div>
+        </div>` : `<input type="hidden" id="fi-nombre" value="correo">`;
+
+    const modalBody = document.querySelector('#itItemModal .modal-body');
+    modalBody.innerHTML = `
+        <form id="itItemForm" onsubmit="return false;">
+            ${headerFields}
+            ${camposEspecificos[categoria] || ''}
+            <div style="border-top:1px dashed #e2e8f0;margin:12px 0 14px;padding-top:14px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                    <label style="margin:0;font-weight:600;font-size:0.85rem;color:#475569">
+                        <i class="fas fa-plus-circle" style="color:var(--primary);margin-right:5px"></i>Campos personalizados
+                    </label>
+                    <button type="button" onclick="addExtraFieldRow()" style="background:none;border:1px solid #e2e8f0;color:var(--primary);cursor:pointer;font-weight:600;font-size:0.8rem;padding:5px 10px;border-radius:6px;display:flex;align-items:center;gap:5px;font-family:inherit">
+                        <i class="fas fa-plus"></i> Añadir
+                    </button>
+                </div>
+                <div id="extraFieldsContainer"></div>
+            </div>
+        </form>`;
+
+    document.getElementById('itItemModal').style.display = 'flex';
+}
 
 // ============================================
 // EDITAR DISPOSITIVO
 // ============================================
 async function openEditDispositivoModal(itemId, categoria) {
-    // Obtener todos los dispositivos de esta categoría y encontrar el que queremos
     let allItems;
     try {
         allItems = await getDispositivos(currentCompanyId, categoria);
@@ -1194,7 +1299,7 @@ async function openEditDispositivoModal(itemId, categoria) {
     const item = allItems.find(i => i.id === itemId);
     if (!item) { showToast('error', 'Error', 'Dispositivo no encontrado'); return; }
 
-    const labelMap = { equipo:'Equipo', servidor:'Servidor', nas:'NAS', red:'Dispositivo de Red', licencia:'Licencia', otro:'Elemento' };
+    const labelMap = { equipo:'Equipo', servidor:'Servidor', nas:'NAS', red:'Dispositivo de Red', correo:'Correo', otro:'Elemento' };
     document.getElementById('itItemModalTitle').textContent = `Editar ${labelMap[categoria] || categoria}`;
     document.getElementById('itItemModal').dataset.categoria = categoria;
     document.getElementById('itItemModal').dataset.editId = itemId;
@@ -1242,18 +1347,17 @@ async function openEditDispositivoModal(itemId, categoria) {
                 <div class="form-group"><label>Usuario</label><input type="text" id="fi-usuario" placeholder="admin" value="${item.usuario||''}"></div>
                 <div class="form-group"><label>Contraseña</label><input type="text" id="fi-password" placeholder="••••••••" value="${item.password||''}"></div>
             </div>`,
-        licencia: `
-            <div class="form-row">
-                <div class="form-group"><label>Software</label><input type="text" id="fi-software" placeholder="Microsoft 365 Business" value="${item.software||''}"></div>
-                <div class="form-group"><label>Nº Usuarios</label><input type="number" id="fi-num-usuarios" placeholder="15" value="${item.num_usuarios||''}"></div>
+        correo: `
+            <div class="form-group">
+                <label>Nombre del cliente</label>
+                <input type="text" id="fi-nombre-correo-cliente" placeholder="Juan García" value="${item.nombre_cliente||''}">
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Vencimiento</label><input type="date" id="fi-vencimiento" value="${item.vencimiento||''}"></div>
-                <div class="form-group"><label>Clave de Licencia</label><input type="text" id="fi-clave" placeholder="XXXXX-XXXXX-XXXXX" value="${item.clave_licencia||''}"></div>
+                <div class="form-group"><label>Correo</label><input type="email" id="fi-correo-cliente" placeholder="juan@empresa.com" value="${item.correo_cliente||''}"></div>
+                <div class="form-group"><label>Contraseña</label><input type="text" id="fi-password-correo-cliente" placeholder="••••••••" value="${item.password_cliente||''}"></div>
             </div>`,
     };
 
-    // Campos extra existentes
     const extraEntries = Object.entries(item.campos_extra || {});
     const extraHtml = extraEntries.map(([k, v]) => `
         <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:center">
@@ -1264,20 +1368,24 @@ async function openEditDispositivoModal(itemId, categoria) {
             </button>
         </div>`).join('');
 
+    // Para correos no mostramos campos nombre/tipo genéricos
+    const headerFields = categoria !== 'correo' ? `
+        <div class="form-row">
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" id="fi-nombre" placeholder="Nombre del dispositivo" value="${item.nombre||''}" required>
+            </div>
+            <div class="form-group">
+                <label>Tipo</label>
+                <input type="text" id="fi-tipo" placeholder="Selecciona o escribe..." list="fi-tipo-list" value="${item.tipo||''}">
+                <datalist id="fi-tipo-list">${sugerencias}</datalist>
+            </div>
+        </div>` : `<input type="hidden" id="fi-nombre" value="${item.nombre||'correo'}">`;
+
     const modalBody = document.querySelector('#itItemModal .modal-body');
     modalBody.innerHTML = `
         <form id="itItemForm" onsubmit="return false;">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre *</label>
-                    <input type="text" id="fi-nombre" placeholder="Nombre del dispositivo" value="${item.nombre||''}" required>
-                </div>
-                <div class="form-group">
-                    <label>Tipo</label>
-                    <input type="text" id="fi-tipo" placeholder="Selecciona o escribe..." list="fi-tipo-list" value="${item.tipo||''}">
-                    <datalist id="fi-tipo-list">${sugerencias}</datalist>
-                </div>
-            </div>
+            ${headerFields}
             ${camposEspecificos[categoria] || ''}
             <div style="border-top:1px dashed #e2e8f0;margin:12px 0 14px;padding-top:14px">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -1316,99 +1424,7 @@ const TIPO_SUGERENCIAS = {
     servidor: ['Servidor Físico', 'Servidor Virtual', 'Servidor de Archivos'],
     nas:      ['NAS Synology', 'NAS QNAP'],
     red:      ['Router', 'Switch', 'Access Point', 'Firewall', 'Modem'],
-    licencia: ['Microsoft', 'Adobe', 'Antivirus', 'ERP', 'CRM'],
 };
-
-function openAddDispositivoModal(categoria) {
-    const labelMap = { equipo:'Equipo', servidor:'Servidor', nas:'NAS', red:'Dispositivo de Red', licencia:'Licencia', otro:'Elemento' };
-    document.getElementById('itItemModalTitle').textContent = `Añadir ${labelMap[categoria] || categoria}`;
-    document.getElementById('itItemModal').dataset.categoria = categoria;
-    delete document.getElementById('itItemModal').dataset.editId; // limpiar si venía de editar
-
-    const sugerencias = (TIPO_SUGERENCIAS[categoria] || []).map(s => `<option value="${s}">`).join('');
-
-    const camposEspecificos = {
-        equipo: `
-            <div class="form-group">
-                <label>Número de Serie *</label>
-                <input type="text" id="fi-serie" placeholder="Ej: SN-2024-ABC123" required>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>IP</label><input type="text" id="fi-ip" placeholder="192.168.1.10"></div>
-                <div class="form-group"><label>AnyDesk ID</label><input type="text" id="fi-anydesk" placeholder="123456789"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>Usuario</label><input type="text" id="fi-usuario" placeholder="admin"></div>
-                <div class="form-group"><label>Contraseña</label><input type="text" id="fi-password" placeholder="••••••••"></div>
-            </div>`,
-        servidor: `
-            <div class="form-row">
-                <div class="form-group"><label>IP</label><input type="text" id="fi-ip" placeholder="192.168.1.5"></div>
-                <div class="form-group"><label>S.O.</label><input type="text" id="fi-so" placeholder="Windows Server 2022"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>Usuario</label><input type="text" id="fi-usuario" placeholder="admin"></div>
-                <div class="form-group"><label>Contraseña</label><input type="text" id="fi-password" placeholder="••••••••"></div>
-            </div>`,
-        nas: `
-            <div class="form-row">
-                <div class="form-group"><label>IP</label><input type="text" id="fi-ip" placeholder="192.168.1.20"></div>
-                <div class="form-group"><label>Capacidad</label><input type="text" id="fi-capacidad" placeholder="4TB"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>Usuario</label><input type="text" id="fi-usuario" placeholder="admin"></div>
-                <div class="form-group"><label>Contraseña</label><input type="text" id="fi-password" placeholder="••••••••"></div>
-            </div>`,
-        red: `
-            <div class="form-row">
-                <div class="form-group"><label>IP</label><input type="text" id="fi-ip" placeholder="192.168.1.1"></div>
-                <div class="form-group"><label>Modelo</label><input type="text" id="fi-modelo" placeholder="Cisco RV340"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>Usuario</label><input type="text" id="fi-usuario" placeholder="admin"></div>
-                <div class="form-group"><label>Contraseña</label><input type="text" id="fi-password" placeholder="••••••••"></div>
-            </div>`,
-        licencia: `
-            <div class="form-row">
-                <div class="form-group"><label>Software</label><input type="text" id="fi-software" placeholder="Microsoft 365 Business"></div>
-                <div class="form-group"><label>Nº Usuarios</label><input type="number" id="fi-num-usuarios" placeholder="15"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>Vencimiento</label><input type="date" id="fi-vencimiento"></div>
-                <div class="form-group"><label>Clave de Licencia</label><input type="text" id="fi-clave" placeholder="XXXXX-XXXXX-XXXXX"></div>
-            </div>`,
-    };
-
-    const modalBody = document.querySelector('#itItemModal .modal-body');
-    modalBody.innerHTML = `
-        <form id="itItemForm" onsubmit="return false;">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre *</label>
-                    <input type="text" id="fi-nombre" placeholder="Nombre del dispositivo" required>
-                </div>
-                <div class="form-group">
-                    <label>Tipo</label>
-                    <input type="text" id="fi-tipo" placeholder="Selecciona o escribe..." list="fi-tipo-list">
-                    <datalist id="fi-tipo-list">${sugerencias}</datalist>
-                </div>
-            </div>
-            ${camposEspecificos[categoria] || ''}
-            <div style="border-top:1px dashed #e2e8f0;margin:12px 0 14px;padding-top:14px">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-                    <label style="margin:0;font-weight:600;font-size:0.85rem;color:#475569">
-                        <i class="fas fa-plus-circle" style="color:var(--primary);margin-right:5px"></i>Campos personalizados
-                    </label>
-                    <button type="button" onclick="addExtraFieldRow()" style="background:none;border:1px solid #e2e8f0;color:var(--primary);cursor:pointer;font-weight:600;font-size:0.8rem;padding:5px 10px;border-radius:6px;display:flex;align-items:center;gap:5px;font-family:inherit">
-                        <i class="fas fa-plus"></i> Añadir
-                    </button>
-                </div>
-                <div id="extraFieldsContainer"></div>
-            </div>
-        </form>`;
-
-    document.getElementById('itItemModal').style.display = 'flex';
-}
 
 function addExtraFieldRow() {
     const container = document.getElementById('extraFieldsContainer');
@@ -1432,8 +1448,8 @@ async function saveITItem() {
     if (!nombre) { showToast('error', 'Error', 'El nombre es obligatorio'); return; }
 
     if (categoria === 'equipo') {
-    const serie = document.getElementById('fi-serie')?.value?.trim();
-    if (!serie) { showToast('error', 'Error', 'El número de serie es obligatorio'); return; }
+        const serie = document.getElementById('fi-serie')?.value?.trim();
+        if (!serie) { showToast('error', 'Error', 'El número de serie es obligatorio'); return; }
     }
 
     const g = id => document.getElementById(id)?.value?.trim() || null;
@@ -1445,7 +1461,9 @@ async function saveITItem() {
     });
 
     const payload = {
-        empresa_id: currentCompanyId, categoria, nombre,
+        empresa_id:        currentCompanyId,
+        categoria,
+        nombre,
         tipo:              g('fi-tipo'),
         ip:                g('fi-ip'),
         numero_serie:      g('fi-serie'),
@@ -1455,10 +1473,9 @@ async function saveITItem() {
         sistema_operativo: g('fi-so'),
         capacidad:         g('fi-capacidad'),
         modelo:            g('fi-modelo'),
-        software:          g('fi-software'),
-        num_usuarios:      g('fi-num-usuarios') ? parseInt(g('fi-num-usuarios')) : null,
-        vencimiento:       g('fi-vencimiento'),
-        clave_licencia:    g('fi-clave'),
+        nombre_cliente:    g('fi-nombre-correo-cliente'),
+        correo_cliente:    g('fi-correo-cliente'),
+        password_cliente:  g('fi-password-correo-cliente'),
         campos_extra:      Object.keys(campos_extra).length ? campos_extra : {},
     };
 
@@ -1480,8 +1497,12 @@ async function saveITItem() {
 function refreshCurrentITTab() {
     const activeTab = document.querySelector('#itTabsPage .it-tab.active')?.dataset?.tab;
     const map = {
-        equipos: renderEquipos, servidores: renderServidores,
-        nas: renderNAS, redes: renderRedes, licencias: renderLicencias, otros: renderOtros,
+        equipos:    renderEquipos,
+        servidores: renderServidores,
+        nas:        renderNAS,
+        redes:      renderRedes,
+        correos:    renderCorreos,
+        otros:      renderOtros,
     };
     if (activeTab && map[activeTab]) map[activeTab](currentCompanyId);
 }
