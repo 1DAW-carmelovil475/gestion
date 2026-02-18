@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Panel de Gestión | Hola Informática</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0047b3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="stylesheet" href="./css/gestion_usuarios.css">
     <link rel="stylesheet" href="./css/gestion_it.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,13 +13,13 @@
 </head>
 <body>
 
+<!-- TOPBAR -->
 <header class="topbar">
     <div class="logo">
         <img src="./img/logoHola.png" alt="Logo Hola Informática">
         <span class="logo-text">Hola Informática</span>
     </div>
 
-    <!-- FIX: clase correcta es top-nav, no top-nav-desktop -->
     <nav class="top-nav">
         <a href="#empresas" class="nav-link active" data-section="empresas">
             <i class="fas fa-building"></i> Empresas
@@ -36,35 +38,57 @@
     <div class="user-area">
         <div class="user-info">
             <i class="fas fa-user-circle"></i>
-            <span id="usuarioNombre">Administrador</span>
+            <span id="usuarioNombre" class="user-name-text">Admin</span>
         </div>
         <button id="logoutBtn" class="btn-logout">
-            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="logout-text">Salir</span>
         </button>
     </div>
 </header>
 
+<!-- BOTTOM NAV MOBILE -->
+<nav class="bottom-nav">
+    <a class="bottom-nav-item active" data-section="empresas">
+        <i class="fas fa-building"></i>
+        <span>Empresas</span>
+    </a>
+    <a class="bottom-nav-item" data-section="contratos">
+        <i class="fas fa-file-contract"></i>
+        <span>Contratos</span>
+    </a>
+    <a class="bottom-nav-item" data-section="facturas">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span>Facturas</span>
+    </a>
+    <a class="bottom-nav-item" data-section="soporte">
+        <i class="fas fa-headset"></i>
+        <span>Tickets</span>
+    </a>
+</nav>
+
 <main class="main-content">
 
-<!-- SECTION: EMPRESAS -->
+<!-- ============ SECTION: EMPRESAS ============ -->
 <section id="empresas" class="content-section active">
     <div class="section-header">
         <div>
-            <h1><i class="fas fa-building"></i> Empresas Cliente</h1>
-            <p>Gestión integral de clientes y contratos de mantenimiento</p>
+            <h1><i class="fas fa-building"></i> Empresas</h1>
+            <p>Gestión integral de clientes</p>
         </div>
         <div class="header-actions">
-            <button id="exportBtn" class="btn-secondary" onclick="exportToExcel()">
-                <i class="fas fa-file-excel"></i> Exportar Excel
+            <button id="exportBtn" class="btn-secondary btn-icon-only" onclick="exportToExcel()" title="Exportar Excel">
+                <i class="fas fa-file-excel"></i>
+                <span class="btn-label">Exportar</span>
             </button>
-            <button class="btn-secondary" onclick="importExcel()">
-                <i class="fas fa-file-import"></i> Importar Excel
+            <button class="btn-secondary btn-icon-only" onclick="importExcel()" title="Importar Excel">
+                <i class="fas fa-file-import"></i>
+                <span class="btn-label">Importar</span>
             </button>
-
             <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none">
-
             <button id="addCompanyBtn" class="btn-primary">
-                <i class="fas fa-plus"></i> Nueva Empresa
+                <i class="fas fa-plus"></i>
+                <span class="btn-label">Nueva</span>
             </button>
         </div>
     </div>
@@ -72,11 +96,11 @@
     <div class="stats">
         <div class="stat-card">
             <div class="stat-icon" style="background:#dbeafe;color:#2563eb"><i class="fas fa-building"></i></div>
-            <div class="stat-info"><h3 id="totalEmpresas">0</h3><p>Total Empresas</p></div>
+            <div class="stat-info"><h3 id="totalEmpresas">0</h3><p>Total</p></div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="fas fa-check-circle"></i></div>
-            <div class="stat-info"><h3 id="empresasActivas">0</h3><p>Contratos Activos</p></div>
+            <div class="stat-info"><h3 id="empresasActivas">0</h3><p>Activos</p></div>
         </div>
     </div>
 
@@ -85,25 +109,28 @@
     <div class="filters">
         <div class="search-box">
             <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Buscar por nombre, CIF, email o contacto...">
+            <input type="text" id="searchInput" placeholder="Buscar empresa, CIF, email...">
         </div>
-        <select id="statusFilter">
-            <option value="all">Todos los estados</option>
-            <option value="Activo">Activo</option>
-            <option value="En revisión">En revisión</option>
-            <option value="Suspendido">Suspendido</option>
-        </select>
-        <select id="serviceFilter">
-            <option value="all">Todos los servicios</option>
-            <option value="Cloud">Cloud</option>
-            <option value="Soporte">Soporte</option>
-            <option value="Hardware">Hardware</option>
-            <option value="Redes">Redes</option>
-            <option value="Seguridad">Seguridad</option>
-        </select>
+        <div class="filter-row">
+            <select id="statusFilter">
+                <option value="all">Estado</option>
+                <option value="Activo">Activo</option>
+                <option value="En revisión">En revisión</option>
+                <option value="Suspendido">Suspendido</option>
+            </select>
+            <select id="serviceFilter">
+                <option value="all">Servicio</option>
+                <option value="Cloud">Cloud</option>
+                <option value="Soporte">Soporte</option>
+                <option value="Hardware">Hardware</option>
+                <option value="Redes">Redes</option>
+                <option value="Seguridad">Seguridad</option>
+            </select>
+        </div>
     </div>
 
-    <div class="table-container">
+    <!-- Vista tabla (desktop) -->
+    <div class="table-container desktop-only">
         <table>
             <thead>
                 <tr>
@@ -114,24 +141,59 @@
             <tbody id="companyTable"></tbody>
         </table>
     </div>
+
+    <!-- Vista cards (móvil) -->
+    <div class="cards-list mobile-only" id="companyCards"></div>
+
     <div class="pagination" id="pagination"></div>
 </section>
 
-<!-- SECTION: CONTRATOS -->
+<!-- ============ SECTION: EMPRESA DETALLE (página completa) ============ -->
+<section id="empresa-detalle" class="content-section">
+    <div class="empresa-detalle-header">
+        <button class="btn-back" onclick="volverAEmpresas()">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <h1 id="empresaDetalleTitulo"><i class="fas fa-building"></i> Empresa</h1>
+        <button class="btn-primary btn-sm" id="empresaDetalleEditBtn">
+            <i class="fas fa-edit"></i> <span>Editar</span>
+        </button>
+    </div>
+
+    <!-- Info básica empresa -->
+    <div class="empresa-info-grid" id="empresaInfoGrid"></div>
+
+    <!-- Tabs IT -->
+    <div class="it-page-section">
+        <div class="it-tabs-wrapper">
+            <div class="it-tabs" id="itTabsPage">
+                <button class="it-tab active" data-tab="equipos"><i class="fas fa-desktop"></i> <span>Equipos</span></button>
+                <button class="it-tab" data-tab="servidores"><i class="fas fa-server"></i> <span>Servidores</span></button>
+                <button class="it-tab" data-tab="nas"><i class="fas fa-hdd"></i> <span>NAS</span></button>
+                <button class="it-tab" data-tab="redes"><i class="fas fa-network-wired"></i> <span>Redes</span></button>
+                <button class="it-tab" data-tab="licencias"><i class="fas fa-key"></i> <span>Licencias</span></button>
+                <button class="it-tab" data-tab="otros"><i class="fas fa-boxes"></i> <span>Otros</span></button>
+            </div>
+        </div>
+        <div id="itContent"></div>
+    </div>
+</section>
+
+<!-- ============ SECTION: CONTRATOS ============ -->
 <section id="contratos" class="content-section">
     <div class="section-header">
         <div>
-            <h1><i class="fas fa-file-contract"></i> Contratos de Mantenimiento</h1>
-            <p>Seguimiento de contratos activos y su estado</p>
+            <h1><i class="fas fa-file-contract"></i> Contratos</h1>
+            <p>Seguimiento de contratos activos</p>
         </div>
         <button id="addContractBtn" class="btn-primary">
-            <i class="fas fa-plus"></i> Nuevo Contrato
+            <i class="fas fa-plus"></i> <span class="btn-label">Nuevo</span>
         </button>
     </div>
     <div class="stats">
         <div class="stat-card">
             <div class="stat-icon" style="background:#dbeafe;color:#2563eb"><i class="fas fa-file-signature"></i></div>
-            <div class="stat-info"><h3 id="totalContratos">0</h3><p>Total Contratos</p></div>
+            <div class="stat-info"><h3 id="totalContratos">0</h3><p>Total</p></div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="fas fa-check"></i></div>
@@ -139,41 +201,42 @@
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="background:#fee2e2;color:#dc2626"><i class="fas fa-exclamation-triangle"></i></div>
-            <div class="stat-info"><h3 id="contratosPorVencer">0</h3><p>Por Vencer (30 días)</p></div>
+            <div class="stat-info"><h3 id="contratosPorVencer">0</h3><p>Por Vencer</p></div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="background:#f3e8ff;color:#9333ea"><i class="fas fa-euro-sign"></i></div>
             <div class="stat-info"><h3 id="facturacionTotal">0€</h3><p>Valor Total</p></div>
         </div>
     </div>
-    <div class="table-container">
+    <div class="table-container desktop-only">
         <table>
             <thead>
                 <tr>
-                    <th>Empresa</th><th>Tipo de Contrato</th><th>Fecha Inicio</th>
-                    <th>Fecha Fin</th><th>Valor Anual</th><th>Estado</th><th>Acciones</th>
+                    <th>Empresa</th><th>Tipo</th><th>Inicio</th>
+                    <th>Fin</th><th>Valor</th><th>Estado</th><th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="contractsTable"></tbody>
         </table>
     </div>
+    <div class="cards-list mobile-only" id="contractsCards"></div>
 </section>
 
-<!-- SECTION: FACTURAS -->
+<!-- ============ SECTION: FACTURAS ============ -->
 <section id="facturas" class="content-section">
     <div class="section-header">
         <div>
-            <h1><i class="fas fa-file-invoice-dollar"></i> Facturación</h1>
-            <p>Seguimiento de facturas y pagos</p>
+            <h1><i class="fas fa-file-invoice-dollar"></i> Facturas</h1>
+            <p>Seguimiento de pagos</p>
         </div>
         <button id="addInvoiceBtn" class="btn-primary">
-            <i class="fas fa-plus"></i> Nueva Factura
+            <i class="fas fa-plus"></i> <span class="btn-label">Nueva</span>
         </button>
     </div>
     <div class="stats">
         <div class="stat-card">
             <div class="stat-icon" style="background:#dbeafe;color:#2563eb"><i class="fas fa-file-invoice"></i></div>
-            <div class="stat-info"><h3 id="totalFacturas">0</h3><p>Total Facturas</p></div>
+            <div class="stat-info"><h3 id="totalFacturas">0</h3><p>Total</p></div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="fas fa-check-circle"></i></div>
@@ -188,7 +251,7 @@
             <div class="stat-info"><h3 id="facturasVencidas">0</h3><p>Vencidas</p></div>
         </div>
     </div>
-    <div class="table-container">
+    <div class="table-container desktop-only">
         <table>
             <thead>
                 <tr>
@@ -199,23 +262,24 @@
             <tbody id="invoicesTable"></tbody>
         </table>
     </div>
+    <div class="cards-list mobile-only" id="invoicesCards"></div>
 </section>
 
-<!-- SECTION: TICKETS -->
+<!-- ============ SECTION: TICKETS ============ -->
 <section id="soporte" class="content-section">
     <div class="section-header">
         <div>
-            <h1><i class="fas fa-headset"></i> Tickets de Soporte</h1>
-            <p>Gestión de incidencias y solicitudes</p>
+            <h1><i class="fas fa-headset"></i> Tickets</h1>
+            <p>Gestión de incidencias</p>
         </div>
         <button id="addTicketBtn" class="btn-primary">
-            <i class="fas fa-plus"></i> Nuevo Ticket
+            <i class="fas fa-plus"></i> <span class="btn-label">Nuevo</span>
         </button>
     </div>
     <div class="stats">
         <div class="stat-card">
             <div class="stat-icon" style="background:#dbeafe;color:#2563eb"><i class="fas fa-ticket-alt"></i></div>
-            <div class="stat-info"><h3 id="totalTickets">0</h3><p>Total Tickets</p></div>
+            <div class="stat-info"><h3 id="totalTickets">0</h3><p>Total</p></div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-spinner"></i></div>
@@ -230,7 +294,7 @@
             <div class="stat-info"><h3 id="ticketsUrgentes">0</h3><p>Urgentes</p></div>
         </div>
     </div>
-    <div class="table-container">
+    <div class="table-container desktop-only">
         <table>
             <thead>
                 <tr>
@@ -241,11 +305,14 @@
             <tbody id="ticketsTable"></tbody>
         </table>
     </div>
+    <div class="cards-list mobile-only" id="ticketsCards"></div>
 </section>
 
 </main>
 
-<!-- MODAL: EMPRESA -->
+<!-- ============================= MODALES ============================= -->
+
+<!-- MODAL: EMPRESA (crear/editar) -->
 <div class="modal" id="companyModal">
     <div class="modal-content modal-large">
         <div class="modal-header">
@@ -255,19 +322,19 @@
         <form id="companyForm">
             <input type="hidden" id="editCompanyIndex">
             <div class="form-tabs">
-                <button type="button" class="form-tab active" data-tab="datos">Datos Básicos</button>
+                <button type="button" class="form-tab active" data-tab="datos">Datos</button>
                 <button type="button" class="form-tab" data-tab="servicios">Servicios</button>
                 <button type="button" class="form-tab" data-tab="contactos">Contactos</button>
             </div>
             <div class="form-tab-content active" id="tab-datos">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Nombre de la Empresa *</label>
-                        <input type="text" id="newName" placeholder="Ej: Tech Solutions SL" required>
+                        <label>Nombre *</label>
+                        <input type="text" id="newName" placeholder="Tech Solutions SL" required>
                     </div>
                     <div class="form-group">
                         <label>CIF *</label>
-                        <input type="text" id="newCif" placeholder="Ej: B12345678" required>
+                        <input type="text" id="newCif" placeholder="B12345678" required>
                     </div>
                 </div>
                 <div class="form-row">
@@ -359,40 +426,6 @@
     </div>
 </div>
 
-<!-- MODAL: DETALLE EMPRESA -->
-<div class="modal" id="companyDetailModal">
-    <div class="modal-content modal-large">
-        <div class="modal-header">
-            <h2 id="detailCompanyName">Detalle de Empresa</h2>
-            <button class="modal-close" onclick="closeDetailModal()"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="company-detail">
-            <div class="detail-section">
-                <h3><i class="fas fa-building"></i> Datos de la Empresa</h3>
-                <div class="detail-grid">
-                    <div class="detail-item"><label>CIF:</label><span id="detailCif"></span></div>
-                    <div class="detail-item"><label>Email:</label><span id="detailEmail"></span></div>
-                    <div class="detail-item"><label>Teléfono:</label><span id="detailPhone"></span></div>
-                    <div class="detail-item"><label>Dirección:</label><span id="detailAddress"></span></div>
-                    <div class="detail-item"><label>Estado:</label><span id="detailStatus" class="status"></span></div>
-                </div>
-            </div>
-            <div class="detail-section">
-                <h3><i class="fas fa-cogs"></i> Servicios Activos</h3>
-                <div class="detail-services" id="detailServices"></div>
-            </div>
-            <div class="detail-section">
-                <h3><i class="fas fa-users"></i> Contactos</h3>
-                <div class="detail-contacts" id="detailContacts"></div>
-            </div>
-            <div class="detail-section">
-                <h3><i class="fas fa-file-contract"></i> Contratos</h3>
-                <div class="detail-contracts" id="detailContracts"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- MODAL: CONTRATO -->
 <div class="modal" id="contractModal">
     <div class="modal-content">
@@ -451,7 +484,7 @@
         <div class="modal-body">
             <div class="form-group">
                 <label>Número de Factura *</label>
-                <input type="text" id="invoiceNumber" placeholder="Ej: FAC-2024-001" required>
+                <input type="text" id="invoiceNumber" placeholder="FAC-2024-001" required>
             </div>
             <div class="form-group">
                 <label>Empresa *</label>
@@ -469,7 +502,7 @@
             </div>
             <div class="form-group">
                 <label>Importe (€) *</label>
-                <input type="number" id="invoiceAmount" placeholder="Ej: 150.00" step="0.01" required>
+                <input type="number" id="invoiceAmount" placeholder="150.00" step="0.01" required>
             </div>
             <div class="form-group">
                 <label>Estado</label>
@@ -491,7 +524,7 @@
 <div class="modal" id="ticketModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>Nuevo Ticket de Soporte</h2>
+            <h2>Nuevo Ticket</h2>
             <button class="modal-close" onclick="closeTicketModal()"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
@@ -534,26 +567,7 @@
     </div>
 </div>
 
-<!-- MODAL: INFRAESTRUCTURA IT -->
-<div class="modal" id="itInfraModal">
-    <div class="modal-content modal-large">
-        <div class="modal-header">
-            <h2 id="itModalCompanyName">Infraestructura IT</h2>
-            <button class="modal-close" onclick="closeITModal()"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="it-tabs">
-            <button class="it-tab active" data-tab="equipos"><i class="fas fa-desktop"></i> Equipos</button>
-            <button class="it-tab" data-tab="servidores"><i class="fas fa-server"></i> Servidores</button>
-            <button class="it-tab" data-tab="nas"><i class="fas fa-hdd"></i> NAS</button>
-            <button class="it-tab" data-tab="redes"><i class="fas fa-network-wired"></i> Redes</button>
-            <button class="it-tab" data-tab="licencias"><i class="fas fa-key"></i> Licencias</button>
-        </div>
-        <div id="itContent"></div>
-    </div>
-</div>
-
 <!-- MODAL: AÑADIR ITEM IT -->
-<!-- FIX: añadido onclick en el botón guardar -->
 <div class="modal" id="itItemModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -564,7 +578,6 @@
             <form id="itItemForm" onsubmit="return false;"></form>
         </div>
         <div class="modal-buttons">
-            <!-- FIX: onclick añadido -->
             <button class="btn-primary" id="saveITItemBtn" onclick="saveITItem()">
                 <i class="fas fa-save"></i> Guardar
             </button>
@@ -576,7 +589,6 @@
 <!-- TOAST -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- FIX: config.js cargado antes que el script principal -->
 <script src="./js/config.js"></script>
 <script>
 (function() {
