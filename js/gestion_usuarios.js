@@ -1005,7 +1005,7 @@ async function renderDispositivos(empresaId, categoria, icon, fields) {
     }
 
     itItemsCache = items;
-    const labelMap = { equipo: 'Equipo', servidor: 'Servidor', nas: 'NAS', red: 'Dispositivo de Red', correo: 'Correo', otro: 'Elemento' };
+    const labelMap = { equipo: 'Equipos', servidor: 'Servidores', nas: 'NAS', red: 'Dispositivos de Red', correo: 'Correos', otro: 'Elementos' };
     buildITContent(items, categoria, icon, fields, labelMap[categoria] || categoria);
 }
 
@@ -1040,7 +1040,7 @@ function buildITContent(items, categoria, icon, fields, label, searchTerm = '') 
         container.innerHTML = `
             <div style="text-align:center;padding:50px 20px;color:var(--gray)">
                 <i class="fas ${icon}" style="font-size:3rem;opacity:0.25;display:block;margin-bottom:16px"></i>
-                <p style="font-size:1.05rem;font-weight:500;margin-bottom:20px">No hay ${label}s registrados</p>
+                <p style="font-size:1.05rem;font-weight:500;margin-bottom:20px">No hay ${label} registrados</p>
                 <button class="btn-primary" onclick="openAddDispositivoModal('${categoria}')">
                     <i class="fas fa-plus"></i> Añadir ${label}
                 </button>
@@ -1193,7 +1193,7 @@ function renderOtros(id)      { renderDispositivos(id, 'otro',     'fa-boxes',  
 // AÑADIR DISPOSITIVO
 // ============================================
 function openAddDispositivoModal(categoria) {
-    const labelMap = { equipo:'Equipo', servidor:'Servidor', nas:'NAS', red:'Dispositivo de Red', correo:'Correo', otro:'Elemento' };
+    const labelMap = { equipo:'Equipos', servidor:'Servidores', nas:'NAS', red:'Dispositivos de Red', correo:'Correos', otro:'Elementos' };
     document.getElementById('itItemModalTitle').textContent = `Añadir ${labelMap[categoria] || categoria}`;
     document.getElementById('itItemModal').dataset.categoria = categoria;
     delete document.getElementById('itItemModal').dataset.editId;
@@ -1300,7 +1300,7 @@ async function openEditDispositivoModal(itemId, categoria) {
     const item = allItems.find(i => i.id === itemId);
     if (!item) { showToast('error', 'Error', 'Dispositivo no encontrado'); return; }
 
-    const labelMap = { equipo:'Equipo', servidor:'Servidor', nas:'NAS', red:'Dispositivo de Red', correo:'Correo', otro:'Elemento' };
+    const labelMap = { equipo:'Equipos', servidor:'Servidores', nas:'NAS', red:'Dispositivos de Red', correo:'Correos', otro:'Elementos' };
     document.getElementById('itItemModalTitle').textContent = `Editar ${labelMap[categoria] || categoria}`;
     document.getElementById('itItemModal').dataset.categoria = categoria;
     document.getElementById('itItemModal').dataset.editId = itemId;
@@ -1533,6 +1533,7 @@ function showToast(type, title, message) {
     const icons = { success:'check-circle', error:'times-circle', warning:'exclamation-circle', info:'info-circle' };
     toast.innerHTML = `
         <i class="fas fa-${icons[type] || 'info-circle'}"></i>
+
         <div class="toast-content">
             <div class="toast-title">${title}</div>
             <div class="toast-message">${message}</div>
