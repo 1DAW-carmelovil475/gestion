@@ -3,6 +3,7 @@
 // config.js debe cargarse antes que este archivo
 // ============================================
 
+let itItemsCache = [];
 let companies  = [];
 let contracts  = [];
 let invoices   = [];
@@ -10,11 +11,7 @@ let tickets    = [];
 let currentPage = 1;
 const itemsPerPage = 10;
 let currentCompanyId = null;
-<<<<<<< HEAD
-let itSearchTerm = '';
-=======
 let previousSection = 'empresas'; // para el botón volver
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
 
 // ============================================
 // INICIALIZACIÓN
@@ -225,33 +222,17 @@ function renderContracts() {
         updateContractStats();
         return;
     }
-<<<<<<< HEAD
-    table.innerHTML = contracts.map(c => `
-        <tr style="cursor:pointer" onclick="viewContractDetail('${c.id}')">
-            <td><strong>${c.empresas?.nombre || '—'}</strong></td>
-            <td>${c.tipo}</td>
-            <td>${formatDate(c.fecha_inicio)}</td>
-            <td>${formatDate(c.fecha_fin)}</td>
-            <td><strong>${parseFloat(c.valor || 0).toLocaleString('es-ES')}€</strong></td>
-            <td><span class="status ${(c.estado||'').replace(/ /g,'-')}">${c.estado}</span></td>
-            <td onclick="event.stopPropagation()">
-                <button class="btn-action btn-delete" onclick="deleteContract('${c.id}')" title="Eliminar">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>`).join('');
-=======
 
     if (table) {
         table.innerHTML = contracts.map(c => `
-            <tr>
+            <tr class="clickable-row" onclick="viewContractDetail('${c.id}')">
                 <td><strong>${c.empresas?.nombre || '—'}</strong></td>
                 <td>${c.tipo}</td>
                 <td>${formatDate(c.fecha_inicio)}</td>
                 <td>${formatDate(c.fecha_fin)}</td>
                 <td><strong>${parseFloat(c.valor || 0).toLocaleString('es-ES')}€</strong></td>
                 <td><span class="status ${(c.estado||'').replace(/ /g,'-')}">${c.estado}</span></td>
-                <td>
+                <td onclick="event.stopPropagation()">
                     <button class="btn-action btn-delete" onclick="deleteContract('${c.id}')" title="Eliminar">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -261,7 +242,7 @@ function renderContracts() {
 
     if (cards) {
         cards.innerHTML = contracts.map(c => `
-            <div class="data-card">
+            <div class="data-card clickable-row" onclick="viewContractDetail('${c.id}')">
                 <div class="data-card-header">
                     <div>
                         <div class="data-card-title">${c.empresas?.nombre || '—'}</div>
@@ -273,13 +254,12 @@ function renderContracts() {
                     <span><i class="fas fa-calendar-alt"></i> ${formatDate(c.fecha_inicio)} → ${formatDate(c.fecha_fin)}</span>
                     <span><i class="fas fa-euro-sign"></i> ${parseFloat(c.valor||0).toLocaleString('es-ES')}€/año</span>
                 </div>
-                <div class="data-card-actions">
+                <div class="data-card-actions" onclick="event.stopPropagation()">
                     <button class="btn-action btn-delete" onclick="deleteContract('${c.id}')"><i class="fas fa-trash"></i> Eliminar</button>
                 </div>
             </div>`).join('');
     }
 
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
     updateContractStats();
 }
 
@@ -296,31 +276,16 @@ function renderInvoices() {
         updateInvoiceStats();
         return;
     }
-<<<<<<< HEAD
-    table.innerHTML = invoices.map(f => `
-        <tr style="cursor:pointer" onclick="viewInvoiceDetail('${f.id}')">
-            <td><strong>${f.numero}</strong></td>
-            <td>${f.empresas?.nombre || '—'}</td>
-            <td>${formatDate(f.fecha)}</td>
-            <td><strong>${parseFloat(f.importe || 0).toFixed(2)}€</strong></td>
-            <td><span class="status ${f.estado}">${f.estado}</span></td>
-            <td onclick="event.stopPropagation()">
-                <button class="btn-action btn-delete" onclick="deleteInvoice('${f.id}')" title="Eliminar">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>`).join('');
-=======
 
     if (table) {
         table.innerHTML = invoices.map(f => `
-            <tr>
+            <tr class="clickable-row" onclick="viewInvoiceDetail('${f.id}')">
                 <td><strong>${f.numero}</strong></td>
                 <td>${f.empresas?.nombre || '—'}</td>
                 <td>${formatDate(f.fecha)}</td>
                 <td><strong>${parseFloat(f.importe || 0).toFixed(2)}€</strong></td>
                 <td><span class="status ${f.estado}">${f.estado}</span></td>
-                <td>
+                <td onclick="event.stopPropagation()">
                     <button class="btn-action btn-delete" onclick="deleteInvoice('${f.id}')" title="Eliminar">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -330,7 +295,7 @@ function renderInvoices() {
 
     if (cards) {
         cards.innerHTML = invoices.map(f => `
-            <div class="data-card">
+            <div class="data-card clickable-row" onclick="viewInvoiceDetail('${f.id}')">
                 <div class="data-card-header">
                     <div>
                         <div class="data-card-title">${f.numero}</div>
@@ -342,13 +307,12 @@ function renderInvoices() {
                     <span><i class="fas fa-calendar-alt"></i> ${formatDate(f.fecha)}</span>
                     <span><i class="fas fa-euro-sign"></i> ${parseFloat(f.importe||0).toFixed(2)}€</span>
                 </div>
-                <div class="data-card-actions">
+                <div class="data-card-actions" onclick="event.stopPropagation()">
                     <button class="btn-action btn-delete" onclick="deleteInvoice('${f.id}')"><i class="fas fa-trash"></i> Eliminar</button>
                 </div>
             </div>`).join('');
     }
 
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
     updateInvoiceStats();
 }
 
@@ -365,32 +329,17 @@ function renderTickets() {
         updateTicketStats();
         return;
     }
-<<<<<<< HEAD
-    table.innerHTML = tickets.map(t => `
-        <tr style="cursor:pointer" onclick="viewTicketDetail('${t.id}')">
-            <td><strong>#${(t.id || '').substring(0,8)}</strong></td>
-            <td>${t.empresas?.nombre || '—'}</td>
-            <td>${t.asunto}</td>
-            <td><span class="status Prioridad-${t.prioridad}">${t.prioridad}</span></td>
-            <td><span class="status ${(t.estado||'').replace(/ /g,'-')}">${t.estado}</span></td>
-            <td>${formatDate(t.created_at)}</td>
-            <td onclick="event.stopPropagation()">
-                <button class="btn-action btn-edit"   onclick="changeTicketStatus('${t.id}','${t.estado}')" title="Cambiar estado"><i class="fas fa-exchange-alt"></i></button>
-                <button class="btn-action btn-delete" onclick="deleteTicket('${t.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
-            </td>
-        </tr>`).join('');
-=======
 
     if (table) {
         table.innerHTML = tickets.map(t => `
-            <tr>
+            <tr class="clickable-row" onclick="viewTicketDetail('${t.id}')">
                 <td><strong>#${(t.id || '').substring(0,8)}</strong></td>
                 <td>${t.empresas?.nombre || '—'}</td>
                 <td>${t.asunto}</td>
                 <td><span class="status Prioridad-${t.prioridad}">${t.prioridad}</span></td>
                 <td><span class="status ${(t.estado||'').replace(/ /g,'-')}">${t.estado}</span></td>
                 <td>${formatDate(t.created_at)}</td>
-                <td>
+                <td onclick="event.stopPropagation()">
                     <button class="btn-action btn-edit" onclick="changeTicketStatus('${t.id}','${t.estado}')" title="Cambiar estado"><i class="fas fa-exchange-alt"></i></button>
                     <button class="btn-action btn-delete" onclick="deleteTicket('${t.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                 </td>
@@ -399,7 +348,7 @@ function renderTickets() {
 
     if (cards) {
         cards.innerHTML = tickets.map(t => `
-            <div class="data-card">
+            <div class="data-card clickable-row" onclick="viewTicketDetail('${t.id}')">
                 <div class="data-card-header">
                     <div>
                         <div class="data-card-title">${t.asunto}</div>
@@ -411,189 +360,139 @@ function renderTickets() {
                     <span><i class="fas fa-flag"></i> <span class="status Prioridad-${t.prioridad}" style="padding:2px 8px;font-size:0.72rem">${t.prioridad}</span></span>
                     <span><i class="fas fa-calendar-alt"></i> ${formatDate(t.created_at)}</span>
                 </div>
-                <div class="data-card-actions">
+                <div class="data-card-actions" onclick="event.stopPropagation()">
                     <button class="btn-action btn-edit" onclick="changeTicketStatus('${t.id}','${t.estado}')"><i class="fas fa-exchange-alt"></i> Estado</button>
                     <button class="btn-action btn-delete" onclick="deleteTicket('${t.id}')"><i class="fas fa-trash"></i></button>
                 </div>
             </div>`).join('');
     }
 
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
     updateTicketStats();
 }
 
 // ============================================
-// MODALES DE DETALLE — CONTRATOS / FACTURAS / TICKETS
+// DETALLE — CONTRATO
 // ============================================
 function viewContractDetail(id) {
     const c = contracts.find(x => x.id === id);
     if (!c) return;
-
-    const today = new Date();
-    const endDate = new Date(c.fecha_fin);
-    const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
-    let daysLeftHtml = '';
-    if (c.estado === 'Activo') {
-        if (daysLeft < 0) {
-            daysLeftHtml = `<span style="color:#dc2626;font-weight:600">Vencido hace ${Math.abs(daysLeft)} días</span>`;
-        } else if (daysLeft <= 30) {
-            daysLeftHtml = `<span style="color:#d97706;font-weight:600">Vence en ${daysLeft} días ⚠️</span>`;
-        } else {
-            daysLeftHtml = `<span style="color:#16a34a;font-weight:600">${daysLeft} días restantes</span>`;
-        }
-    }
-
-    showGenericDetailModal({
-        icon: 'fa-file-contract',
-        iconColor: '#2563eb',
-        iconBg: '#dbeafe',
-        title: `Contrato — ${c.empresas?.nombre || '—'}`,
-        subtitle: c.tipo,
-        fields: [
-            { label: 'Empresa',      value: c.empresas?.nombre || '—' },
-            { label: 'Tipo',         value: c.tipo },
-            { label: 'Estado',       value: c.estado, badge: true },
-            { label: 'Fecha Inicio', value: formatDate(c.fecha_inicio) },
-            { label: 'Fecha Fin',    value: formatDate(c.fecha_fin) },
-            { label: 'Vigencia',     value: daysLeftHtml, raw: true },
-            { label: 'Valor Anual',  value: `${parseFloat(c.valor || 0).toLocaleString('es-ES')}€`, highlight: true },
-        ],
-        notes: c.notas,
-    });
+    document.getElementById('contractDetailBody').innerHTML = `
+        <div class="detail-info-grid">
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-building"></i> Empresa</span>
+                <span class="detail-info-value">${c.empresas?.nombre || '—'}</span>
+            </div>
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-tag"></i> Tipo</span>
+                <span class="detail-info-value">${c.tipo || '—'}</span>
+            </div>
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-calendar-alt"></i> Fecha Inicio</span>
+                <span class="detail-info-value">${formatDate(c.fecha_inicio)}</span>
+            </div>
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-calendar-times"></i> Fecha Fin</span>
+                <span class="detail-info-value">${formatDate(c.fecha_fin)}</span>
+            </div>
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-euro-sign"></i> Valor Anual</span>
+                <span class="detail-info-value"><strong>${parseFloat(c.valor || 0).toLocaleString('es-ES')}€</strong></span>
+            </div>
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-circle"></i> Estado</span>
+                <span class="detail-info-value"><span class="status ${(c.estado||'').replace(/ /g,'-')}">${c.estado}</span></span>
+            </div>
+        </div>
+        <div class="detail-notes-box">
+            <div class="detail-notes-label"><i class="fas fa-sticky-note"></i> Notas</div>
+            <div class="detail-notes-content">${c.notas || '<em style="color:var(--gray)">Sin nota</em>'}</div>
+        </div>`;
+    document.getElementById('contractDetailModal').style.display = 'flex';
 }
 
+// ============================================
+// DETALLE — FACTURA
+// ============================================
 function viewInvoiceDetail(id) {
     const f = invoices.find(x => x.id === id);
     if (!f) return;
-
-    showGenericDetailModal({
-        icon: 'fa-file-invoice-dollar',
-        iconColor: '#16a34a',
-        iconBg: '#dcfce7',
-        title: `Factura ${f.numero}`,
-        subtitle: f.empresas?.nombre || '—',
-        fields: [
-            { label: 'Nº Factura',      value: f.numero },
-            { label: 'Empresa',         value: f.empresas?.nombre || '—' },
-            { label: 'Estado',          value: f.estado, badge: true },
-            { label: 'Fecha Emisión',   value: formatDate(f.fecha) },
-            { label: 'Fecha Vencimiento', value: formatDate(f.fecha_vencimiento) },
-            { label: 'Importe',         value: `${parseFloat(f.importe || 0).toFixed(2)}€`, highlight: true },
-        ],
-        notes: f.notas,
-    });
+    document.getElementById('invoiceDetailBody').innerHTML = `
+        <div class="detail-info-grid">
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-hashtag"></i> Nº Factura</span>
+                <span class="detail-info-value"><strong>${f.numero}</strong></span>
+            </div>
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-building"></i> Empresa</span>
+                <span class="detail-info-value">${f.empresas?.nombre || '—'}</span>
+            </div>
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-calendar-alt"></i> Fecha Emisión</span>
+                <span class="detail-info-value">${formatDate(f.fecha)}</span>
+            </div>
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-calendar-times"></i> Vencimiento</span>
+                <span class="detail-info-value">${formatDate(f.fecha_vencimiento)}</span>
+            </div>
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-euro-sign"></i> Importe</span>
+                <span class="detail-info-value"><strong>${parseFloat(f.importe || 0).toFixed(2)}€</strong></span>
+            </div>
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-circle"></i> Estado</span>
+                <span class="detail-info-value"><span class="status ${f.estado}">${f.estado}</span></span>
+            </div>
+        </div>
+        <div class="detail-notes-box">
+            <div class="detail-notes-label"><i class="fas fa-sticky-note"></i> Notas</div>
+            <div class="detail-notes-content">${f.notas || '<em style="color:var(--gray)">Sin nota</em>'}</div>
+        </div>`;
+    document.getElementById('invoiceDetailModal').style.display = 'flex';
 }
 
+// ============================================
+// DETALLE — TICKET
+// ============================================
 function viewTicketDetail(id) {
     const t = tickets.find(x => x.id === id);
     if (!t) return;
-
-    showGenericDetailModal({
-        icon: 'fa-headset',
-        iconColor: '#d97706',
-        iconBg: '#fef3c7',
-        title: `Ticket #${(t.id || '').substring(0,8)}`,
-        subtitle: t.asunto,
-        fields: [
-            { label: 'Empresa',    value: t.empresas?.nombre || '—' },
-            { label: 'Asunto',     value: t.asunto },
-            { label: 'Prioridad',  value: t.prioridad, badge: true },
-            { label: 'Estado',     value: t.estado, badge: true },
-            { label: 'Fecha',      value: formatDate(t.created_at) },
-        ],
-        extraSection: t.descripcion ? {
-            label: 'Descripción',
-            content: t.descripcion,
-        } : null,
-        notes: t.notas,
-    });
-}
-
-function showGenericDetailModal({ icon, iconColor, iconBg, title, subtitle, fields, notes, extraSection }) {
-    // Remove existing detail modal if any
-    const existing = document.getElementById('genericDetailModal');
-    if (existing) existing.remove();
-
-    const badgeClass = val => {
-        const map = {
-            'Activo': 'Activo', 'Activo': 'Activo',
-            'Suspendido': 'Suspendido', 'En revisión': 'En-revisión',
-            'Pagada': 'Pagada', 'Pendiente': 'Pendiente', 'Vencida': 'Vencida',
-            'Abierto': 'Abierto', 'En proceso': 'En-proceso', 'Cerrado': 'Cerrado',
-            'Baja': 'Baja', 'Media': 'Media', 'Alta': 'Alta', 'Urgente': 'Urgente',
-        };
-        return map[val] || val;
-    };
-
-    const fieldsHtml = fields.map(f => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9">
-            <span style="font-size:0.83rem;color:#64748b;font-weight:500;min-width:130px">${f.label}</span>
-            ${f.raw
-                ? `<span>${f.value}</span>`
-                : f.badge
-                    ? `<span class="status ${badgeClass(f.value)}">${f.value}</span>`
-                    : f.highlight
-                        ? `<span style="font-weight:700;font-size:1.05rem;color:#1e293b">${f.value}</span>`
-                        : `<span style="font-weight:500;color:#1e293b">${f.value}</span>`
-            }
-        </div>`).join('');
-
-    const extraHtml = extraSection ? `
-        <div style="margin-top:18px">
-            <div style="font-size:0.82rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">${extraSection.label}</div>
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;color:#374151;font-size:0.92rem;line-height:1.6">${extraSection.content}</div>
-        </div>` : '';
-
-    const notesHtml = `
-        <div style="margin-top:18px">
-            <div style="font-size:0.82rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">
-                <i class="fas fa-sticky-note" style="margin-right:5px;color:#94a3b8"></i>Notas
+    document.getElementById('ticketDetailBody').innerHTML = `
+        <div class="detail-info-grid">
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-hashtag"></i> ID</span>
+                <span class="detail-info-value">#${(t.id || '').substring(0,8)}</span>
             </div>
-            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px;color:${notes ? '#374151' : '#94a3b8'};font-size:0.92rem;line-height:1.6;font-style:${notes ? 'normal' : 'italic'}">
-                ${notes || 'Sin nota'}
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-building"></i> Empresa</span>
+                <span class="detail-info-value">${t.empresas?.nombre || '—'}</span>
             </div>
+            <div class="detail-info-item detail-info-full">
+                <span class="detail-info-label"><i class="fas fa-comment-alt"></i> Asunto</span>
+                <span class="detail-info-value">${t.asunto}</span>
+            </div>
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-flag"></i> Prioridad</span>
+                <span class="detail-info-value"><span class="status Prioridad-${t.prioridad}">${t.prioridad}</span></span>
+            </div>
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-circle"></i> Estado</span>
+                <span class="detail-info-value"><span class="status ${(t.estado||'').replace(/ /g,'-')}">${t.estado}</span></span>
+            </div>
+            <div class="detail-info-item">
+                <span class="detail-info-label"><i class="fas fa-calendar-alt"></i> Fecha</span>
+                <span class="detail-info-value">${formatDate(t.created_at)}</span>
+            </div>
+        </div>
+        ${t.descripcion ? `
+        <div class="detail-notes-box" style="margin-top:12px">
+            <div class="detail-notes-label"><i class="fas fa-align-left"></i> Descripción</div>
+            <div class="detail-notes-content">${t.descripcion}</div>
+        </div>` : ''}
+        <div class="detail-notes-box" style="margin-top:12px">
+            <div class="detail-notes-label"><i class="fas fa-sticky-note"></i> Notas</div>
+            <div class="detail-notes-content">${t.notas || '<em style="color:var(--gray)">Sin nota</em>'}</div>
         </div>`;
-
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.id = 'genericDetailModal';
-    modal.style.display = 'flex';
-    modal.innerHTML = `
-        <div class="modal-content" style="max-width:520px;width:100%">
-            <div class="modal-header" style="border-bottom:none;padding-bottom:0">
-                <div style="display:flex;align-items:center;gap:14px">
-                    <div style="width:46px;height:46px;border-radius:12px;background:${iconBg};color:${iconColor};display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">
-                        <i class="fas ${icon}"></i>
-                    </div>
-                    <div>
-                        <h2 style="margin:0;font-size:1.1rem;color:#1e293b">${title}</h2>
-                        <p style="margin:2px 0 0;font-size:0.85rem;color:#64748b">${subtitle}</p>
-                    </div>
-                </div>
-                <button class="modal-close" onclick="document.getElementById('genericDetailModal').remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" style="padding-top:16px">
-                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:6px 16px">
-                    ${fieldsHtml}
-                </div>
-                ${extraHtml}
-                ${notesHtml}
-            </div>
-            <div class="modal-buttons" style="border-top:1px solid #f1f5f9;margin-top:4px">
-                <button class="btn-secondary" onclick="document.getElementById('genericDetailModal').remove()">
-                    <i class="fas fa-times"></i> Cerrar
-                </button>
-            </div>
-        </div>`;
-
-    // Close on backdrop click
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) modal.remove();
-    });
-
-    document.body.appendChild(modal);
+    document.getElementById('ticketDetailModal').style.display = 'flex';
 }
 
 // ============================================
@@ -646,33 +545,16 @@ function exportToExcel() {
     const workbook  = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Empresas");
     const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-<<<<<<< HEAD
-    const blob = new Blob([wbout], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-=======
     const blob  = new Blob([wbout], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = `empresas_${new Date().toISOString().split('T')[0]}.xlsx`;
-<<<<<<< HEAD
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast('success', 'Exportado', `${companies.length} empresas exportadas`);
-}
-
-// ============================================
-// IMPORTAR EXCEL
-// ============================================
-=======
     document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(url);
     showToast('success', 'Exportado', `${companies.length} empresas exportadas`);
 }
 
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
 function importExcel() {
     document.getElementById('excelFileInput').click();
 }
@@ -687,41 +569,22 @@ function handleExcelImport(event) {
         try {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
-<<<<<<< HEAD
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-=======
             const worksheet = workbook.Sheets[workbook.SheetNames[0]];
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
             if (!jsonData.length) { showToast('warning', 'Vacío', 'El archivo no contiene datos'); return; }
             showLoading(true);
             for (const row of jsonData) {
                 const payload = {
-<<<<<<< HEAD
-                    nombre: row['Nombre'] || '',
-                    cif: row['CIF'] || '',
-                    email: row['Email'] || null,
-                    telefono: row['Teléfono'] || null,
-                    direccion: row['Dirección'] || null,
-                    estado: row['Estado'] || 'Activo',
-=======
                     nombre: row['Nombre'] || '', cif: row['CIF'] || '',
                     email: row['Email'] || null, telefono: row['Teléfono'] || null,
                     direccion: row['Dirección'] || null, estado: row['Estado'] || 'Activo',
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
                     servicios: row['Servicios'] ? row['Servicios'].split(',').map(s => s.trim()) : []
                 };
                 if (!payload.nombre || !payload.cif) continue;
                 await apiFetch('/api/empresas', { method: 'POST', body: JSON.stringify(payload) });
             }
             showToast('success', 'Importado', `${jsonData.length} empresas importadas`);
-<<<<<<< HEAD
-            await loadEmpresas();
-            renderCompanies();
-=======
             await loadEmpresas(); renderCompanies();
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
         } catch (err) {
             console.error(err);
             showToast('error', 'Error', 'No se pudo importar el archivo');
@@ -1029,7 +892,6 @@ async function deleteTicket(id) {
 // ============================================
 function viewCompany(id) {
     currentCompanyId = id;
-    itSearchTerm = '';
     const company = companies.find(c => c.id === id);
     if (!company) return;
 
@@ -1095,12 +957,6 @@ function renderEmpresaDetalle(id) {
     renderEquipos(id);
 }
 
-<<<<<<< HEAD
-function closeITModal() {
-    document.getElementById('itInfraModal').style.display = 'none';
-    currentCompanyId = null;
-    itSearchTerm = '';
-=======
 function navigateToDetalle() {
     document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
     document.getElementById('empresa-detalle').classList.add('active');
@@ -1109,7 +965,6 @@ function navigateToDetalle() {
     document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(l => l.classList.remove('active'));
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
 }
 
 function volverAEmpresas() {
@@ -1125,7 +980,6 @@ function setupITTabs() {
         tab.addEventListener('click', function () {
             document.querySelectorAll('#itTabsPage .it-tab').forEach(t => t.classList.remove('active'));
             this.classList.add('active');
-            itSearchTerm = '';
             if (!currentCompanyId) return;
             const map = {
                 equipos:    () => renderEquipos(currentCompanyId),
@@ -1145,46 +999,6 @@ async function getDispositivos(empresaId, categoria) {
     return apiFetch(`/api/dispositivos?empresa_id=${empresaId}&categoria=${categoria}`);
 }
 
-// ============================================
-// BUSCADOR IT — renderiza la barra de búsqueda
-// ============================================
-function renderITSearchBar(categoria, totalItems) {
-    return `
-        <div style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 14px;margin-bottom:18px">
-            <i class="fas fa-search" style="color:#94a3b8;font-size:0.9rem"></i>
-            <input
-                type="text"
-                id="itSearchInput"
-                placeholder="Buscar por nombre${categoria === 'equipo' ? ' o número de serie' : ''}..."
-                value="${itSearchTerm}"
-                oninput="handleITSearch(this.value, '${categoria}')"
-                style="border:none;background:none;outline:none;font-size:0.92rem;color:#1e293b;width:100%;font-family:inherit"
-            >
-            ${itSearchTerm ? `<button onclick="clearITSearch('${categoria}')" style="border:none;background:none;color:#94a3b8;cursor:pointer;font-size:0.85rem;padding:0;display:flex;align-items:center">
-                <i class="fas fa-times-circle"></i>
-            </button>` : ''}
-            <span style="font-size:0.78rem;color:#94a3b8;white-space:nowrap;border-left:1px solid #e2e8f0;padding-left:10px;margin-left:4px">${totalItems} total</span>
-        </div>`;
-}
-
-function handleITSearch(value, categoria) {
-    itSearchTerm = value;
-    const activeTab = document.querySelector('.it-tab.active')?.dataset?.tab;
-    const map = {
-        equipos:    () => renderEquipos(currentCompanyId),
-        servidores: () => renderServidores(currentCompanyId),
-        nas:        () => renderNAS(currentCompanyId),
-        redes:      () => renderRedes(currentCompanyId),
-        licencias:  () => renderLicencias(currentCompanyId),
-    };
-    if (activeTab && map[activeTab]) map[activeTab]();
-}
-
-function clearITSearch(categoria) {
-    itSearchTerm = '';
-    handleITSearch('', categoria);
-}
-
 async function renderDispositivos(empresaId, categoria, icon, fields) {
     const container = document.getElementById('itContent');
     container.innerHTML = `<div style="text-align:center;padding:40px"><i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--primary)"></i><p style="margin-top:12px;color:var(--gray)">Cargando...</p></div>`;
@@ -1196,22 +1010,33 @@ async function renderDispositivos(empresaId, categoria, icon, fields) {
         return;
     }
 
+    itItemsCache = items;
     const labelMap = { equipo: 'Equipo', servidor: 'Servidor', nas: 'NAS', red: 'Dispositivo de Red', licencia: 'Licencia', otro: 'Elemento' };
-    const label = labelMap[categoria] || categoria;
+    buildITContent(items, categoria, icon, fields, labelMap[categoria] || categoria);
+}
 
-    // Filter by search term
-    let filtered = items;
-    if (itSearchTerm) {
-        const term = itSearchTerm.toLowerCase();
-        filtered = items.filter(item => {
-            const matchNombre = (item.nombre || '').toLowerCase().includes(term);
-            const matchSerie = (item.numero_serie || '').toLowerCase().includes(term);
-            return matchNombre || matchSerie;
-        });
-    }
+function buildITContent(items, categoria, icon, fields, label, searchTerm = '') {
+    const container = document.getElementById('itContent');
 
-    if (!items.length) {
-        container.innerHTML = `
+    const filtered = searchTerm
+        ? items.filter(item =>
+            (item.nombre || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.numero_serie || '').toLowerCase().includes(searchTerm.toLowerCase()))
+        : items;
+
+    const searchBar = `
+        <div class="it-search-bar">
+            <div class="it-search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="itSearchInput"
+                    placeholder="Buscar por nombre${categoria === 'equipo' ? ' o número de serie' : ''}..."
+                    value="${searchTerm}"
+                    oninput="handleITSearch(event,'${categoria}','${icon}','${label}')">
+            </div>
+        </div>`;
+
+    if (!filtered.length && !searchTerm) {
+        container.innerHTML = searchBar + `
             <div style="text-align:center;padding:50px 20px;color:var(--gray)">
                 <i class="fas ${icon}" style="font-size:3rem;opacity:0.25;display:block;margin-bottom:16px"></i>
                 <p style="font-size:1.05rem;font-weight:500;margin-bottom:20px">No hay ${label}s registrados</p>
@@ -1222,53 +1047,38 @@ async function renderDispositivos(empresaId, categoria, icon, fields) {
         return;
     }
 
-    let html = `
-<<<<<<< HEAD
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-            <h3 style="font-size:1.05rem;color:var(--dark);display:flex;align-items:center;gap:8px">
-=======
+    if (!filtered.length) {
+        container.innerHTML = searchBar + `
+            <div style="text-align:center;padding:40px;color:var(--gray)">
+                <i class="fas fa-search" style="font-size:2.5rem;opacity:0.2;display:block;margin-bottom:12px"></i>
+                <p>Sin resultados para "<strong>${searchTerm}</strong>"</p>
+            </div>`;
+        setTimeout(() => { const el = document.getElementById('itSearchInput'); if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);} }, 0);
+        return;
+    }
+
+    let html = searchBar + `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
             <h3 style="font-size:1rem;color:var(--dark);display:flex;align-items:center;gap:8px">
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
                 <i class="fas ${icon}" style="color:var(--primary)"></i> ${label}s
-                <span style="background:#e0f2fe;color:#0369a1;padding:2px 10px;border-radius:20px;font-size:0.78rem;font-weight:600">${items.length}</span>
+                <span style="background:#e0f2fe;color:#0369a1;padding:2px 10px;border-radius:20px;font-size:0.78rem;font-weight:600">${filtered.length}${searchTerm ? ` de ${items.length}` : ''}</span>
             </h3>
             <button class="btn-primary btn-sm" onclick="openAddDispositivoModal('${categoria}')">
                 <i class="fas fa-plus"></i> Añadir
             </button>
         </div>
-        ${renderITSearchBar(categoria, items.length)}`;
-
-    if (!filtered.length) {
-        html += `
-            <div style="text-align:center;padding:40px 20px;color:var(--gray)">
-                <i class="fas fa-search" style="font-size:2rem;opacity:0.25;display:block;margin-bottom:12px"></i>
-                <p style="font-size:0.95rem">No se encontraron resultados para "<strong>${itSearchTerm}</strong>"</p>
-                <button onclick="clearITSearch('${categoria}')" style="margin-top:10px;background:none;border:1px solid #e2e8f0;color:var(--primary);cursor:pointer;padding:6px 14px;border-radius:8px;font-size:0.85rem">
-                    Limpiar búsqueda
-                </button>
-            </div>`;
-        container.innerHTML = html;
-        // Restore focus & cursor
-        setTimeout(() => {
-            const inp = document.getElementById('itSearchInput');
-            if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
-        }, 50);
-        return;
-    }
-
-    html += `<div class="it-items-grid">`;
+        <div class="it-items-grid">`;
 
     filtered.forEach(item => {
         const extra = item.campos_extra || {};
         let bodyHtml = '';
 
-        // Show numero_serie prominently for equipos
+        // Número de serie destacado (solo equipos)
         if (categoria === 'equipo' && item.numero_serie) {
             bodyHtml += `
-                <div class="it-item-row" style="background:#f0f9ff;border-radius:6px;padding:4px 6px;margin-bottom:4px">
-                    <span class="it-label" style="color:#0369a1">Nº Serie:</span>
-                    <span style="font-weight:600;color:#0369a1;font-family:monospace;font-size:0.88rem">${item.numero_serie}</span>
+                <div class="it-item-row">
+                    <span class="it-label">Nº Serie:</span>
+                    <span style="font-family:monospace;font-size:0.85rem;color:#0369a1;font-weight:600">${item.numero_serie}</span>
                 </div>`;
         }
 
@@ -1279,7 +1089,7 @@ async function renderDispositivos(empresaId, categoria, icon, fields) {
                     <span class="it-label">${f.label}:</span>
                     <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
                         <span id="pwd-${f.key}-${item.id}" class="password-hidden">••••••••</span>
-                        <button class="btn-icon" onclick="togglePassword('pwd-${f.key}-${item.id}', \`${(val||'').replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`)">
+                        <button class="btn-icon" onclick="togglePassword('pwd-${f.key}-${item.id}',\`${(val||'').replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`)">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
@@ -1295,22 +1105,9 @@ async function renderDispositivos(empresaId, categoria, icon, fields) {
             bodyHtml += `<div class="it-item-row"><span class="it-label">${k}:</span><span>${v}</span></div>`;
         });
 
-        // Highlight search match in card name
-        let nombreDisplay = item.nombre;
-        if (itSearchTerm) {
-            const re = new RegExp(`(${itSearchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-            nombreDisplay = item.nombre.replace(re, '<mark style="background:#fef08a;border-radius:2px;padding:0 1px">$1</mark>');
-        }
-
         html += `
             <div class="it-item-card">
                 <div class="it-item-header">
-<<<<<<< HEAD
-                    <h4><i class="fas ${icon}"></i> <span>${nombreDisplay}</span>${item.tipo ? ` <small style="font-weight:400;opacity:0.65;font-size:0.85rem">(${item.tipo})</small>` : ''}</h4>
-                    <button class="btn-action btn-delete" onclick="deleteDispositivo('${item.id}','${categoria}')" title="Eliminar" style="margin:0">
-                        <i class="fas fa-trash"></i>
-                    </button>
-=======
                     <h4><i class="fas ${icon}"></i> ${item.nombre}${item.tipo ? ` <small style="font-weight:400;opacity:0.65;font-size:0.82rem">(${item.tipo})</small>` : ''}</h4>
                     <div style="display:flex;gap:4px;flex-shrink:0">
                         <button class="btn-action btn-edit" onclick="openEditDispositivoModal('${item.id}','${categoria}')" title="Editar" style="margin:0;padding:7px 10px">
@@ -1320,19 +1117,19 @@ async function renderDispositivos(empresaId, categoria, icon, fields) {
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
                 </div>
                 <div class="it-item-body">${bodyHtml}</div>
             </div>`;
     });
 
     container.innerHTML = html + '</div>';
+    if (searchTerm) {
+        setTimeout(() => { const el = document.getElementById('itSearchInput'); if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);} }, 0);
+    }
+}
 
-    // Restore focus after re-render
-    setTimeout(() => {
-        const inp = document.getElementById('itSearchInput');
-        if (inp && itSearchTerm) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
-    }, 50);
+function handleITSearch(event, categoria, icon, label) {
+    buildITContent(itItemsCache, categoria, icon, CAMPOS[categoria] || [], label, event.target.value);
 }
 
 const CAMPOS = {
@@ -1406,6 +1203,10 @@ async function openEditDispositivoModal(itemId, categoria) {
 
     const camposEspecificos = {
         equipo: `
+            <div class="form-group">
+                <label>Número de Serie *</label>
+                <input type="text" id="fi-serie" placeholder="Ej: SN-2024-ABC123" value="${item.numero_serie||''}">
+            </div>
             <div class="form-row">
                 <div class="form-group"><label>IP</label><input type="text" id="fi-ip" placeholder="192.168.1.10" value="${item.ip||''}"></div>
                 <div class="form-group"><label>AnyDesk ID</label><input type="text" id="fi-anydesk" placeholder="123456789" value="${item.anydesk_id||''}"></div>
@@ -1526,17 +1327,12 @@ function openAddDispositivoModal(categoria) {
 
     const sugerencias = (TIPO_SUGERENCIAS[categoria] || []).map(s => `<option value="${s}">`).join('');
 
-    // Número de serie field — only for equipos, required
-    const numSerieField = categoria === 'equipo' ? `
-        <div class="form-group">
-            <label>Número de Serie <span style="color:#dc2626">*</span></label>
-            <input type="text" id="fi-num-serie" placeholder="Ej: SN-2024-ABC123" required
-                style="font-family:monospace;letter-spacing:0.03em">
-        </div>` : '';
-
     const camposEspecificos = {
         equipo: `
-            ${numSerieField}
+            <div class="form-group">
+                <label>Número de Serie *</label>
+                <input type="text" id="fi-serie" placeholder="Ej: SN-2024-ABC123" required>
+            </div>
             <div class="form-row">
                 <div class="form-group"><label>IP</label><input type="text" id="fi-ip" placeholder="192.168.1.10"></div>
                 <div class="form-group"><label>AnyDesk ID</label><input type="text" id="fi-anydesk" placeholder="123456789"></div>
@@ -1588,7 +1384,7 @@ function openAddDispositivoModal(categoria) {
         <form id="itItemForm" onsubmit="return false;">
             <div class="form-row">
                 <div class="form-group">
-                    <label>Nombre <span style="color:#dc2626">*</span></label>
+                    <label>Nombre *</label>
                     <input type="text" id="fi-nombre" placeholder="Nombre del dispositivo" required>
                 </div>
                 <div class="form-group">
@@ -1635,14 +1431,9 @@ async function saveITItem() {
     const nombre    = document.getElementById('fi-nombre')?.value?.trim();
     if (!nombre) { showToast('error', 'Error', 'El nombre es obligatorio'); return; }
 
-    // Validate numero_serie for equipos
     if (categoria === 'equipo') {
-        const numSerie = document.getElementById('fi-num-serie')?.value?.trim();
-        if (!numSerie) {
-            showToast('error', 'Error', 'El número de serie es obligatorio para equipos');
-            document.getElementById('fi-num-serie')?.focus();
-            return;
-        }
+    const serie = document.getElementById('fi-serie')?.value?.trim();
+    if (!serie) { showToast('error', 'Error', 'El número de serie es obligatorio'); return; }
     }
 
     const g = id => document.getElementById(id)?.value?.trim() || null;
@@ -1657,6 +1448,7 @@ async function saveITItem() {
         empresa_id: currentCompanyId, categoria, nombre,
         tipo:              g('fi-tipo'),
         ip:                g('fi-ip'),
+        numero_serie:      g('fi-serie'),
         usuario:           g('fi-usuario'),
         password:          g('fi-password'),
         anydesk_id:        g('fi-anydesk'),
@@ -1667,7 +1459,6 @@ async function saveITItem() {
         num_usuarios:      g('fi-num-usuarios') ? parseInt(g('fi-num-usuarios')) : null,
         vencimiento:       g('fi-vencimiento'),
         clave_licencia:    g('fi-clave'),
-        numero_serie:      g('fi-num-serie'),
         campos_extra:      Object.keys(campos_extra).length ? campos_extra : {},
     };
 

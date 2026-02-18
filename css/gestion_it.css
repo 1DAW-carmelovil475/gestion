@@ -52,45 +52,6 @@
     min-height: 300px;
 }
 
-/* ---- Buscador IT ---- */
-.it-search-bar {
-    margin-bottom: 20px;
-}
-
-.it-search-box {
-    position: relative;
-    max-width: 420px;
-}
-
-.it-search-box i {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--gray);
-    font-size: 0.9rem;
-    pointer-events: none;
-}
-
-.it-search-box input {
-    width: 100%;
-    padding: 10px 16px 10px 40px;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    font-family: inherit;
-    font-size: 0.92rem;
-    color: var(--dark);
-    background: #f8fafc;
-    transition: all 0.25s ease;
-}
-
-.it-search-box input:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(0,102,255,0.1);
-}
-
 /* ---- Grid de tarjetas ---- */
 .it-items-grid {
     display: grid;
@@ -195,106 +156,6 @@
 }
 
 /* ============================================
-   FILAS CLICABLES (Contratos, Facturas, Tickets)
-   ============================================ */
-.clickable-row {
-    cursor: pointer;
-    transition: background 0.15s ease;
-}
-
-.clickable-row:hover {
-    background: #f0f6ff !important;
-}
-
-.clickable-row:hover td:first-child {
-    color: var(--primary);
-}
-
-/* ============================================
-   MODALES DE DETALLE (Contrato / Factura / Ticket)
-   ============================================ */
-#contractDetailModal .modal-content,
-#invoiceDetailModal .modal-content,
-#ticketDetailModal .modal-content {
-    max-width: 560px;
-}
-
-/* Grid de campos de detalle */
-.detail-info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.detail-info-item {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-/* Item que ocupa toda la fila */
-.detail-info-full {
-    grid-column: 1 / -1;
-}
-
-.detail-info-label {
-    font-size: 0.76rem;
-    font-weight: 700;
-    color: var(--gray);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.detail-info-label i {
-    color: var(--primary);
-    font-size: 0.78rem;
-}
-
-.detail-info-value {
-    font-size: 0.93rem;
-    font-weight: 600;
-    color: var(--dark);
-    line-height: 1.4;
-}
-
-/* Caja de notas */
-.detail-notes-box {
-    background: #fffbeb;
-    border: 1.5px solid #fde68a;
-    border-radius: 10px;
-    padding: 14px 16px;
-}
-
-.detail-notes-label {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #92400e;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.detail-notes-label i { color: #d97706; }
-
-.detail-notes-content {
-    font-size: 0.9rem;
-    color: #78350f;
-    line-height: 1.6;
-    white-space: pre-wrap;
-}
-
-/* ============================================
    RESPONSIVE IT
    ============================================ */
 @media (max-width: 768px) {
@@ -314,13 +175,6 @@
 
     #itContent { padding: 16px; }
 
-<<<<<<< HEAD
-    .it-search-box { max-width: 100%; }
-
-    .detail-info-grid { grid-template-columns: 1fr; }
-
-    .detail-info-full { grid-column: 1; }
-=======
     .it-item-header { padding: 12px 14px; }
     .it-item-row { padding: 8px 14px; }
 
@@ -330,5 +184,120 @@
 
 @media (max-width: 400px) {
     .it-tab { padding: 12px 10px; }
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
+}
+
+/* ---- Buscador IT ---- */
+.it-search-bar { margin-bottom: 20px; }
+
+.it-search-box {
+    position: relative;
+    max-width: 420px;
+}
+
+.it-search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray);
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+
+.it-search-box input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.92rem;
+    background: #f8fafc;
+    transition: all 0.25s ease;
+    color: var(--dark);
+}
+
+.it-search-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0,102,255,0.1);
+}
+
+/* ---- Filas clicables ---- */
+.clickable-row { cursor: pointer; }
+tr.clickable-row:hover { background: #f0f6ff !important; }
+tr.clickable-row:hover td:first-child { color: var(--primary); }
+.data-card.clickable-row:hover { box-shadow: 0 8px 24px rgba(0,102,255,0.12); border-left: 3px solid var(--primary); }
+
+/* ---- Modales de detalle ---- */
+.detail-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.detail-info-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.detail-info-full { grid-column: 1 / -1; }
+
+.detail-info-label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.detail-info-label i { color: var(--primary); font-size: 0.76rem; }
+
+.detail-info-value {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.detail-notes-box {
+    background: #fffbeb;
+    border: 1.5px solid #fde68a;
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+
+.detail-notes-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #92400e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.detail-notes-label i { color: #d97706; }
+
+.detail-notes-content {
+    font-size: 0.9rem;
+    color: #78350f;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 768px) {
+    .it-search-box { max-width: 100%; }
+    .detail-info-grid { grid-template-columns: 1fr; }
+    .detail-info-full { grid-column: 1; }
 }

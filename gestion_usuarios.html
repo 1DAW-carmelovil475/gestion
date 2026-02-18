@@ -474,20 +474,6 @@
     </div>
 </div>
 
-<!-- MODAL: DETALLE CONTRATO -->
-<div class="modal" id="contractDetailModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2><i class="fas fa-file-contract" style="color:var(--primary);margin-right:8px"></i> Detalle del Contrato</h2>
-            <button class="modal-close" onclick="document.getElementById('contractDetailModal').style.display='none'"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body" id="contractDetailBody"></div>
-        <div class="modal-buttons">
-            <button class="btn-secondary" onclick="document.getElementById('contractDetailModal').style.display='none'">Cerrar</button>
-        </div>
-    </div>
-</div>
-
 <!-- MODAL: FACTURA -->
 <div class="modal" id="invoiceModal">
     <div class="modal-content">
@@ -530,20 +516,6 @@
         <div class="modal-buttons">
             <button class="btn-primary" onclick="saveInvoice()"><i class="fas fa-save"></i> Guardar</button>
             <button class="btn-secondary" onclick="closeInvoiceModal()">Cancelar</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL: DETALLE FACTURA -->
-<div class="modal" id="invoiceDetailModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2><i class="fas fa-file-invoice-dollar" style="color:var(--primary);margin-right:8px"></i> Detalle de Factura</h2>
-            <button class="modal-close" onclick="document.getElementById('invoiceDetailModal').style.display='none'"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body" id="invoiceDetailBody"></div>
-        <div class="modal-buttons">
-            <button class="btn-secondary" onclick="document.getElementById('invoiceDetailModal').style.display='none'">Cerrar</button>
         </div>
     </div>
 </div>
@@ -594,8 +566,34 @@
         </div>
     </div>
 </div>
+<!-- MODAL: DETALLE CONTRATO -->
+<div class="modal" id="contractDetailModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-file-contract" style="color:var(--primary);margin-right:8px"></i> Detalle del Contrato</h2>
+            <button class="modal-close" onclick="document.getElementById('contractDetailModal').style.display='none'"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="contractDetailBody"></div>
+        <div class="modal-buttons">
+            <button class="btn-secondary" onclick="document.getElementById('contractDetailModal').style.display='none'">Cerrar</button>
+        </div>
+    </div>
+</div>
 
-<<<<<<< HEAD
+<!-- MODAL: DETALLE FACTURA -->
+<div class="modal" id="invoiceDetailModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-file-invoice-dollar" style="color:var(--primary);margin-right:8px"></i> Detalle de Factura</h2>
+            <button class="modal-close" onclick="document.getElementById('invoiceDetailModal').style.display='none'"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="invoiceDetailBody"></div>
+        <div class="modal-buttons">
+            <button class="btn-secondary" onclick="document.getElementById('invoiceDetailModal').style.display='none'">Cerrar</button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL: DETALLE TICKET -->
 <div class="modal" id="ticketDetailModal">
     <div class="modal-content">
@@ -610,26 +608,6 @@
     </div>
 </div>
 
-<!-- MODAL: INFRAESTRUCTURA IT -->
-<div class="modal" id="itInfraModal">
-    <div class="modal-content modal-large">
-        <div class="modal-header">
-            <h2 id="itModalCompanyName">Infraestructura IT</h2>
-            <button class="modal-close" onclick="closeITModal()"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="it-tabs">
-            <button class="it-tab active" data-tab="equipos"><i class="fas fa-desktop"></i> Equipos</button>
-            <button class="it-tab" data-tab="servidores"><i class="fas fa-server"></i> Servidores</button>
-            <button class="it-tab" data-tab="nas"><i class="fas fa-hdd"></i> NAS</button>
-            <button class="it-tab" data-tab="redes"><i class="fas fa-network-wired"></i> Redes</button>
-            <button class="it-tab" data-tab="licencias"><i class="fas fa-key"></i> Licencias</button>
-        </div>
-        <div id="itContent"></div>
-    </div>
-</div>
-
-=======
->>>>>>> 531fa8228d3d534728c81df18d484520b7fce413
 <!-- MODAL: AÑADIR ITEM IT -->
 <div class="modal" id="itItemModal">
     <div class="modal-content">
