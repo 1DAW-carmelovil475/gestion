@@ -1037,7 +1037,7 @@ function buildITContent(items, categoria, icon, fields, label, searchTerm = '') 
         </div>`;
 
     if (!filtered.length && !searchTerm) {
-        container.innerHTML = searchBar + `
+        container.innerHTML = `
             <div style="text-align:center;padding:50px 20px;color:var(--gray)">
                 <i class="fas ${icon}" style="font-size:3rem;opacity:0.25;display:block;margin-bottom:16px"></i>
                 <p style="font-size:1.05rem;font-weight:500;margin-bottom:20px">No hay ${label}s registrados</p>
