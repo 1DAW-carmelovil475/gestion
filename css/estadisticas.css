@@ -1,0 +1,405 @@
+/* ============================================
+   ESTADÍSTICAS — CSS
+   ============================================ */
+
+/* Selector de fechas global */
+.stats-date-range {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    color: var(--gray);
+    background: white;
+    border-radius: 10px;
+    padding: 8px 14px;
+    border: 1.5px solid #e2e8f0;
+}
+
+.stats-date-range input[type="date"] {
+    border: none;
+    font-family: inherit;
+    font-size: 0.85rem;
+    color: var(--dark);
+    background: none;
+    outline: none;
+    cursor: pointer;
+}
+
+/* ---- TABS ---- */
+.stats-tabs-wrapper {
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 20px;
+}
+
+.stats-tabs {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 0;
+}
+.stats-tabs::-webkit-scrollbar { display: none; }
+
+.stats-tab {
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--gray);
+    font-family: inherit;
+    font-size: 0.9rem;
+    position: relative;
+    transition: color 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.stats-tab::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0; right: 0;
+    height: 2px;
+    background: var(--primary);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.stats-tab.active { color: var(--primary); }
+.stats-tab.active::after { transform: scaleX(1); }
+
+.stats-tab-content { display: none; }
+.stats-tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+/* ---- PANELS ---- */
+.stats-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.stats-panel {
+    background: white;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.stats-panel-header {
+    padding: 14px 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--dark);
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.stats-panel-header i { color: var(--primary); }
+
+.stats-panel-body {
+    padding: 20px;
+}
+
+/* ---- DONUT ---- */
+.donut-chart-container {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.donut-chart-container canvas {
+    flex-shrink: 0;
+}
+
+.donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 120px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-key {
+    flex: 1;
+    color: var(--dark);
+    font-weight: 500;
+}
+
+.legend-val {
+    color: var(--gray);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* ---- BAR CHART actividad ---- */
+.bar-chart-container {
+    overflow-x: auto;
+    padding-bottom: 8px;
+}
+
+.bar-chart-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 160px;
+    min-width: 600px;
+    padding-top: 20px;
+}
+
+.bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    height: 100%;
+    gap: 4px;
+}
+
+.bar-val-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--primary);
+    min-height: 12px;
+    text-align: center;
+}
+
+.bar-bar-wrap {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+}
+
+.bar-bar {
+    width: 100%;
+    min-height: 2px;
+    border-radius: 3px 3px 0 0;
+    transition: height 0.5s ease;
+}
+
+.bar-day-label {
+    font-size: 0.62rem;
+    color: var(--gray);
+    text-align: center;
+    min-height: 14px;
+    white-space: nowrap;
+}
+
+/* ---- OPERARIOS STATS ---- */
+.operarios-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.operario-stat-card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    transition: all 0.25s ease;
+}
+
+.operario-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.operario-stat-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.operario-stat-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.operario-stat-nombre h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.operario-stat-nombre span {
+    font-size: 0.8rem;
+    color: var(--gray);
+}
+
+.operario-stat-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.metric {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+}
+
+.metric-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--dark);
+    line-height: 1;
+}
+
+.metric-label {
+    font-size: 0.72rem;
+    color: var(--gray);
+    margin-top: 4px;
+    font-weight: 600;
+}
+
+.operario-stat-bar {}
+
+.bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--gray);
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.progress-bar {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.8s ease;
+}
+
+/* ---- EMPRESAS STATS ---- */
+.empresa-stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.empresa-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 4px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.empresa-stat-row:last-child { border-bottom: none; }
+
+.empresa-stat-rank {
+    font-size: 1.1rem;
+    min-width: 32px;
+    text-align: center;
+}
+
+.empresa-stat-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.empresa-stat-nombre {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--dark);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.empresa-progress-bar {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.empresa-progress-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.8s ease;
+    min-width: 4px;
+}
+
+.empresa-stat-badges {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.mini-badge {
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.empresa-stat-total {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--dark);
+    min-width: 36px;
+    text-align: right;
+}
+
+/* ---- LOADING / EMPTY ---- */
+.loading-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--gray);
+    font-size: 0.95rem;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .stats-grid-2 { grid-template-columns: 1fr; }
+    .donut-chart-container { flex-direction: column; align-items: flex-start; }
+    .operarios-stats-grid { grid-template-columns: 1fr; }
+    .empresa-stat-badges { display: none; }
+    .stats-date-range { flex-wrap: wrap; padding: 8px 10px; }
+}

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Estadísticas | Hola Informática</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0047b3">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./css/gestion_usuarios.css">
+    <link rel="stylesheet" href="./css/estadisticas.css">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo">
+        <img src="./img/logoHola.png" alt="Logo">
+        <span class="logo-text">Hola Informática</span>
+    </div>
+    <nav class="top-nav">
+        <a href="./gestion_usuarios.html" class="nav-link"><i class="fas fa-building"></i> Panel</a>
+        <a href="./tickets.html" class="nav-link"><i class="fas fa-headset"></i> Tickets</a>
+        <a href="./estadisticas.html" class="nav-link active"><i class="fas fa-chart-bar"></i> Estadísticas</a>
+    </nav>
+    <div class="user-area">
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span id="usuarioNombre" class="user-name-text">Cargando...</span>
+        </div>
+        <button id="logoutBtn" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="logout-text">Salir</span>
+        </button>
+    </div>
+</header>
+
+<nav class="bottom-nav">
+    <a class="bottom-nav-item" href="./gestion_usuarios.html"><i class="fas fa-building"></i><span>Panel</span></a>
+    <a class="bottom-nav-item" href="./tickets.html"><i class="fas fa-headset"></i><span>Tickets</span></a>
+    <a class="bottom-nav-item active"><i class="fas fa-chart-bar"></i><span>Stats</span></a>
+</nav>
+
+<main class="main-content">
+
+    <div class="section-header">
+        <div>
+            <h1><i class="fas fa-chart-bar"></i> Estadísticas</h1>
+            <p>Análisis de rendimiento del equipo y clientes</p>
+        </div>
+        <div class="header-actions">
+            <!-- Filtro de rango de fechas global -->
+            <div class="stats-date-range">
+                <i class="fas fa-calendar"></i>
+                <input type="date" id="globalDesde" onchange="cargarTodo()">
+                <span>—</span>
+                <input type="date" id="globalHasta" onchange="cargarTodo()">
+                <button class="btn-secondary btn-sm" onclick="limpiarFechasGlobal()">
+                    <i class="fas fa-undo"></i> Todo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS GENERALES (tarjetas superiores) -->
+    <div class="stats" id="statsGenerales" style="margin-bottom:28px">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#dbeafe;color:#2563eb"><i class="fas fa-ticket-alt"></i></div>
+            <div class="stat-info"><h3 id="gTotal">—</h3><p>Total tickets</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-clock"></i></div>
+            <div class="stat-info"><h3 id="gAbiertos">—</h3><p>Abiertos</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-info"><h3 id="gCompletados">—</h3><p>Completados</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#f3e8ff;color:#9333ea"><i class="fas fa-file-invoice-dollar"></i></div>
+            <div class="stat-info"><h3 id="gFacturados">—</h3><p>Facturados</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fee2e2;color:#dc2626"><i class="fas fa-exclamation-circle"></i></div>
+            <div class="stat-info"><h3 id="gUrgentes">—</h3><p>Urgentes</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#dbeafe;color:#2563eb"><i class="fas fa-calendar-week"></i></div>
+            <div class="stat-info"><h3 id="g7dias">—</h3><p>Últimos 7 días</p></div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="stats-tabs-wrapper">
+        <div class="stats-tabs">
+            <button class="stats-tab active" data-tab="tickets" onclick="mostrarTab('tickets')">
+                <i class="fas fa-ticket-alt"></i> Tickets
+            </button>
+            <button class="stats-tab" data-tab="operarios" onclick="mostrarTab('operarios')">
+                <i class="fas fa-users"></i> Operarios
+            </button>
+            <button class="stats-tab" data-tab="empresas" onclick="mostrarTab('empresas')">
+                <i class="fas fa-building"></i> Empresas
+            </button>
+        </div>
+    </div>
+
+    <!-- TAB: TICKETS -->
+    <div class="stats-tab-content active" id="tab-tickets">
+        <div class="stats-grid-2">
+            <!-- Estado actual -->
+            <div class="stats-panel">
+                <div class="stats-panel-header">
+                    <i class="fas fa-chart-donut"></i> Distribución por estado
+                </div>
+                <div class="stats-panel-body">
+                    <div class="donut-chart-container">
+                        <canvas id="donutEstados" width="200" height="200"></canvas>
+                        <div class="donut-legend" id="donutLegendEstados"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prioridad -->
+            <div class="stats-panel">
+                <div class="stats-panel-header">
+                    <i class="fas fa-flag"></i> Distribución por prioridad
+                </div>
+                <div class="stats-panel-body">
+                    <div class="donut-chart-container">
+                        <canvas id="donutPrioridades" width="200" height="200"></canvas>
+                        <div class="donut-legend" id="donutLegendPrioridades"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actividad reciente (últimos 30 días por día) -->
+        <div class="stats-panel" style="margin-top:16px">
+            <div class="stats-panel-header">
+                <i class="fas fa-chart-line"></i> Actividad — tickets abiertos por día (últimas 4 semanas)
+            </div>
+            <div class="stats-panel-body">
+                <div id="actividadChart" class="bar-chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: OPERARIOS -->
+    <div class="stats-tab-content" id="tab-operarios">
+        <div id="operariosStatsContainer" class="operarios-stats-grid"></div>
+    </div>
+
+    <!-- TAB: EMPRESAS -->
+    <div class="stats-tab-content" id="tab-empresas">
+        <div class="stats-panel">
+            <div class="stats-panel-header">
+                <i class="fas fa-building"></i> Clientes con más incidencias
+            </div>
+            <div class="stats-panel-body" id="empresasStatsBody">
+                <div class="loading-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="./js/config.js"></script>
+<script src="./js/estadisticas.js"></script>
+<script>
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        if (confirm('¿Cerrar sesión?')) { sessionStorage.clear(); window.location.href = './index.html'; }
+    });
+</script>
+</body>
+</html>
