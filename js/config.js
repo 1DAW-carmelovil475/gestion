@@ -1,69 +1,120 @@
 // ============================================
-// HOLA INFORMÁTICA - CONFIGURACIÓN FRONTEND
+// HOLA INFORMÁTICA — CONFIG GLOBAL
 // ============================================
 
-const API_URL = 'http://localhost:3000';
+'use strict';
 
-// Rol del usuario actual (se carga al iniciar sesión)
-let currentUserRol = null;
+// ⚠️ CAMBIA ESTO por tu URL real del backend en producción
+// En desarrollo: 'http://localhost:3000'
+// En producción: 'https://tu-backend.railway.app' (o donde tengas el backend)
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000'
+    : 'https://TU_BACKEND_URL_AQUI'; // ← IMPORTANTE: cambia esto
 
-function apiHeaders() {
-    const token = sessionStorage.getItem('hola_token');
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-    };
-}
-
+// ============================================
+// FETCH WRAPPER
+// ============================================
 async function apiFetch(path, options = {}) {
-    const res = await fetch(`${API_URL}${path}`, {
-        ...options,
-        headers: apiHeaders()
-    });
+    const token = sessionStorage.getItem('hola_token');
 
-    if (res.status === 401) {
-        sessionStorage.clear();
-        window.location.href = './index.html';
-        return;
+    const config = {
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            ...(options.headers || {}),
+        },
+        ...options,
+    };
+
+    // Si el body ya es string (JSON.stringify), no sobreescribir Content-Type
+    if (options.body instanceof FormData) {
+        delete config.headers['Content-Type'];
+    }
+
+    let url;
+    if (path.startsWith('http')) {
+        url = path;
+    } else {
+        url = `${API_URL}${path}`;
+    }
+
+    let res;
+    try {
+        res = await fetch(url, config);
+    } catch (networkError) {
+        // Error de red (servidor caído, CORS bloqueado, etc.)
+        throw new Error(`Error de conexión con el servidor. ¿Está el backend corriendo en ${API_URL}?`);
+    }
+
+    // Si la respuesta NO es JSON, es el error "Unexpected token '<'"
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+        const text = await res.text();
+        console.error('El servidor devolvió HTML en vez de JSON:', text.substring(0, 200));
+        throw new Error(`El servidor devolvió una respuesta inesperada (${res.status}). Comprueba que el backend esté corriendo en ${API_URL}`);
     }
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+
+    if (res.status === 401) {
+        // Token expirado → redirigir al login
+        sessionStorage.clear();
+        window.location.replace('./index.html');
+        throw new Error('Sesión expirada. Por favor, inicia sesión de nuevo.');
+    }
+
+    if (!res.ok) {
+        throw new Error(data.error || data.message || `Error ${res.status}`);
+    }
+
     return data;
 }
 
-// Carga el perfil del usuario y aplica restricciones de rol en la UI
+// ============================================
+// GESTIÓN DE SESIÓN / ROL
+// ============================================
 async function initUserSession() {
+    const token = sessionStorage.getItem('hola_token');
+    if (!token) {
+        window.location.replace('./index.html');
+        return null;
+    }
+
     try {
         const me = await apiFetch('/api/auth/me');
-        currentUserRol = me.rol;
-
-        // Mostrar nombre en topbar
-        const el = document.getElementById('usuarioNombre');
-        if (el) el.textContent = me.nombre || me.email;
-
-        // Guardar rol en sessionStorage para uso posterior
+        sessionStorage.setItem('hola_usuario', me.nombre || me.email);
         sessionStorage.setItem('hola_rol', me.rol);
+        sessionStorage.setItem('hola_id', me.id);
 
-        // Mostrar/ocultar sección de usuarios según rol
+        // Actualizar nombre en UI
+        const nameEl = document.getElementById('usuarioNombre');
+        if (nameEl) nameEl.textContent = me.nombre || me.email;
+
+        // Mostrar/ocultar elementos solo-admin
         applyRoleRestrictions(me.rol);
 
         return me;
-    } catch (e) {
-        console.error('Error cargando sesión:', e);
+    } catch (err) {
+        console.error('Error inicializando sesión:', err);
         sessionStorage.clear();
-        window.location.href = './index.html';
+        window.location.replace('./index.html');
+        return null;
     }
 }
 
-// Oculta elementos reservados para admin si el usuario es trabajador
 function applyRoleRestrictions(rol) {
-    const adminOnly = document.querySelectorAll('[data-admin-only]');
-    adminOnly.forEach(el => {
-        el.style.display = rol === 'admin' ? '' : 'none';
+    const isAdminUser = rol === 'admin';
+
+    // Elementos con data-admin-only → ocultar si no es admin
+    document.querySelectorAll('[data-admin-only]').forEach(el => {
+        el.style.display = isAdminUser ? '' : 'none';
     });
 }
 
 function isAdmin() {
     return sessionStorage.getItem('hola_rol') === 'admin';
+}
+
+function getCurrentUserId() {
+    return sessionStorage.getItem('hola_id');
 }

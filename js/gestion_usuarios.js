@@ -54,6 +54,8 @@ function setupNavigation() {
     // Top nav (desktop)
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', function (e) {
+            const href = this.getAttribute('href');
+            if (href && !href.startsWith('#')) return;
             e.preventDefault();
             const sectionId = this.getAttribute('data-section');
             navigateTo(sectionId);
@@ -62,7 +64,10 @@ function setupNavigation() {
 
     // Bottom nav (mobile)
     document.querySelectorAll('.bottom-nav-item').forEach(item => {
-        item.addEventListener('click', function () {
+        item.addEventListener('click', function (e) { // ← añade el parámetro "e"
+            const href = this.getAttribute('href');
+            if (href && !href.startsWith('#')) return;
+            e.preventDefault();
             const sectionId = this.getAttribute('data-section');
             navigateTo(sectionId);
         });
