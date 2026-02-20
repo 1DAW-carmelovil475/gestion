@@ -1,16 +1,18 @@
 // ============================================
-// TICKETS V2 — FRONTEND JS
+// TICKETS V3 — FRONTEND JS
+// Incluye: comentarios con archivos + sistema
+// de notas/tabs. Chat interno → chat.html
 // ============================================
 
 'use strict';
 
-let todosLosTickets = [];
-let operarios = [];
-let empresas = [];
-let ticketActual = null;
-let currentUserId = null;
-let chatInternoAbierto = false;
-let notasGuardadoTimer = null;
+let todosLosTickets     = [];
+let operarios           = [];
+let empresas            = [];
+let ticketActual        = null;
+let currentUserId       = null;
+let notasGuardadoTimer  = null;
+let comentariosArchivosSeleccionados = []; // archivos pendientes de envío
 
 const AVATAR_COLORS = ['#0066ff','#16a34a','#d97706','#dc2626','#9333ea','#0891b2','#be185d','#065f46'];
 
@@ -39,11 +41,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!me) return;
     currentUserId = me.id;
 
+    // Inicializar avatar del autor en el formulario de comentarios
+    actualizarAvatarComentarioForm(me);
+
     await Promise.all([cargarEmpresas(), cargarOperarios()]);
     await cargarTickets();
     await cargarStats();
 
-    // Búsqueda con debounce
     const searchInput = document.getElementById('searchTicket');
     if (searchInput) {
         let searchTimer;
@@ -54,6 +58,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+function actualizarAvatarComentarioForm(me) {
+    const avatarEl  = document.getElementById('comentarioAutorAvatar');
+    const nombreEl  = document.getElementById('comentarioAutorNombre');
+    if (avatarEl && me) {
+        const color = getAvatarColor(me.id);
+        avatarEl.style.background = color;
+        avatarEl.textContent       = getInitials(me.nombre);
+    }
+    if (nombreEl && me) nombreEl.textContent = me.nombre || '';
+}
+
+// ============================================
+// TABS: NOTAS / COMENTARIOS
+// ============================================
+function switchTab(tab, btn) {
+    // Desactivar todos los tabs
+    document.querySelectorAll('.detalle-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => { p.style.display = 'none'; p.classList.remove('active'); });
+
+    btn.classList.add('active');
+
+    if (tab === 'notas') {
+        const panel = document.getElementById('panelNotas');
+        if (panel) { panel.style.display = 'flex'; panel.classList.add('active'); }
+    } else if (tab === 'comentarios') {
+        const panel = document.getElementById('panelComentarios');
+        if (panel) { panel.style.display = 'flex'; panel.classList.add('active'); }
+        cargarComentarios();
+    }
+}
+
 // ============================================
 // CARGA DE DATOS
 // ============================================
@@ -62,16 +97,8 @@ async function cargarEmpresas() {
         empresas = await apiFetch('/api/empresas');
         const selEmpresa = document.getElementById('ticketEmpresa');
         const selFiltro  = document.getElementById('filtroEmpresa');
-        if (selEmpresa) {
-            empresas.forEach(e => {
-                selEmpresa.innerHTML += `<option value="${e.id}">${escHtml(e.nombre)}</option>`;
-            });
-        }
-        if (selFiltro) {
-            empresas.forEach(e => {
-                selFiltro.innerHTML += `<option value="${e.id}">${escHtml(e.nombre)}</option>`;
-            });
-        }
+        if (selEmpresa) empresas.forEach(e => { selEmpresa.innerHTML += `<option value="${e.id}">${escHtml(e.nombre)}</option>`; });
+        if (selFiltro)  empresas.forEach(e => { selFiltro.innerHTML  += `<option value="${e.id}">${escHtml(e.nombre)}</option>`; });
     } catch (err) {
         console.error('Error empresas:', err);
         showToast('Error', 'No se pudieron cargar las empresas', 'error');
@@ -82,11 +109,7 @@ async function cargarOperarios() {
     try {
         operarios = await apiFetch('/api/v2/operarios');
         const selFiltro = document.getElementById('filtroOperario');
-        if (selFiltro) {
-            operarios.forEach(op => {
-                selFiltro.innerHTML += `<option value="${op.id}">${escHtml(op.nombre)}</option>`;
-            });
-        }
+        if (selFiltro) operarios.forEach(op => { selFiltro.innerHTML += `<option value="${op.id}">${escHtml(op.nombre)}</option>`; });
         renderOperariosCheckboxes('operariosCheckboxes', []);
     } catch (err) {
         console.error('Error operarios:', err);
@@ -102,10 +125,8 @@ async function cargarDispositivosEmpresa() {
     try {
         const dispositivos = await apiFetch(`/api/dispositivos?empresa_id=${empresaId}`);
         dispositivos
-            .filter(d => d.categoria !== 'correo') // ← excluir correos
-            .forEach(d => {
-                sel.innerHTML += `<option value="${d.id}">[${d.tipo || d.categoria}] ${escHtml(d.nombre)}</option>`;
-            });
+            .filter(d => d.categoria !== 'correo')
+            .forEach(d => { sel.innerHTML += `<option value="${d.id}">[${d.tipo || d.categoria}] ${escHtml(d.nombre)}</option>`; });
     } catch (err) {
         console.error('Error dispositivos:', err);
     }
@@ -134,9 +155,7 @@ async function cargarTickets() {
 
     try {
         let tickets = await apiFetch(`/api/v2/tickets?${params}`);
-        if (estado === 'abiertos') {
-            tickets = tickets.filter(t => t.estado === 'Pendiente' || t.estado === 'En curso');
-        }
+        if (estado === 'abiertos') tickets = tickets.filter(t => t.estado === 'Pendiente' || t.estado === 'En curso');
         todosLosTickets = tickets;
         const totalEl = document.getElementById('totalFiltrado');
         if (totalEl) totalEl.textContent = `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`;
@@ -152,27 +171,25 @@ async function cargarTickets() {
 async function cargarStats() {
     try {
         let data = null;
-        if (isAdmin()) {
-            data = await apiFetch('/api/v2/estadisticas/resumen').catch(() => null);
-        }
+        if (isAdmin()) data = await apiFetch('/api/v2/estadisticas/resumen').catch(() => null);
 
         const all = todosLosTickets;
         const stats = data || {
-            total:      all.length,
-            pendientes: all.filter(t => t.estado === 'Pendiente').length,
-            en_curso:   all.filter(t => t.estado === 'En curso').length,
-            completados:all.filter(t => t.estado === 'Completado').length,
-            facturados: all.filter(t => t.estado === 'Facturado').length,
-            urgentes:   all.filter(t => t.prioridad === 'Urgente').length,
+            total:       all.length,
+            pendientes:  all.filter(t => t.estado === 'Pendiente').length,
+            en_curso:    all.filter(t => t.estado === 'En curso').length,
+            completados: all.filter(t => t.estado === 'Completado').length,
+            facturados:  all.filter(t => t.estado === 'Facturado').length,
+            urgentes:    all.filter(t => t.prioridad === 'Urgente').length,
         };
 
         const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-        set('statTotal',      stats.total);
-        set('statPendientes', stats.pendientes);
-        set('statEnCurso',    stats.en_curso);
-        set('statCompletados',stats.completados);
-        set('statFacturados', stats.facturados);
-        set('statUrgentes',   stats.urgentes);
+        set('statTotal',       stats.total);
+        set('statPendientes',  stats.pendientes);
+        set('statEnCurso',     stats.en_curso);
+        set('statCompletados', stats.completados);
+        set('statFacturados',  stats.facturados);
+        set('statUrgentes',    stats.urgentes);
     } catch (err) {
         console.error('Error stats:', err);
     }
@@ -197,12 +214,11 @@ function renderTablaTickets(tickets) {
         const asignados = t.ticket_asignaciones || [];
         const avatares = asignados.map(a => {
             const nombre = a.profiles?.nombre || '?';
-            const color = getAvatarColor(a.user_id);
+            const color  = getAvatarColor(a.user_id);
             return `<div class="avatar-operario" style="background:${color}" title="${escHtml(nombre)}">${getInitials(nombre)}</div>`;
         }).join('');
 
-        // ✅ El tiempo viene del backend ya congelado
-        const tiempoStr = formatHorasTranscurridas(t.horas_transcurridas || 0);
+        const tiempoStr    = formatHorasTranscurridas(t.horas_transcurridas || 0);
         const estadoCerrado = t.estado === 'Completado' || t.estado === 'Facturado';
 
         return `<tr onclick="abrirTicket('${t.id}')" style="cursor:pointer">
@@ -214,9 +230,7 @@ function renderTablaTickets(tickets) {
                     ${t.dispositivos ? `<span class="ticket-empresa-sub"><i class="fas fa-desktop" style="font-size:0.7rem"></i> ${escHtml(t.dispositivos.nombre)}</span>` : ''}
                 </div>
             </td>
-            <td>
-                <div class="avatares-operarios">${avatares || '<span style="color:var(--gray);font-size:0.8rem">Sin asignar</span>'}</div>
-            </td>
+            <td><div class="avatares-operarios">${avatares || '<span style="color:var(--gray);font-size:0.8rem">Sin asignar</span>'}</div></td>
             <td><span class="prioridad-badge prioridad-${t.prioridad}">${prioridadIcon(t.prioridad)} ${t.prioridad}</span></td>
             <td><span class="estado-badge estado-${escHtml(t.estado)}">${estadoIcon(t.estado)} ${t.estado}</span></td>
             <td style="font-weight:600;color:${estadoCerrado ? 'var(--gray)' : 'var(--primary)'};font-size:0.82rem">
@@ -247,9 +261,9 @@ function renderCardsTickets(tickets) {
         return;
     }
     container.innerHTML = tickets.map(t => {
-        const asignados = t.ticket_asignaciones || [];
+        const asignados  = t.ticket_asignaciones || [];
         const nombresOps = asignados.map(a => a.profiles?.nombre).filter(Boolean).join(', ');
-        const tiempoStr = formatHorasTranscurridas(t.horas_transcurridas || 0);
+        const tiempoStr  = formatHorasTranscurridas(t.horas_transcurridas || 0);
         const estadoCerrado = t.estado === 'Completado' || t.estado === 'Facturado';
         return `<div class="ticket-card-mobile prio-${t.prioridad}" onclick="abrirTicket('${t.id}')">
             <div class="ticket-card-top">
@@ -273,9 +287,16 @@ function renderCardsTickets(tickets) {
 // ABRIR / CERRAR DETALLE TICKET
 // ============================================
 async function abrirTicket(id) {
-    document.getElementById('vistaLista').style.display = 'none';
+    document.getElementById('vistaLista').style.display  = 'none';
     document.getElementById('vistaDetalle').style.display = 'flex';
-    chatInternoAbierto = false;
+
+    // Resetear a tab notas
+    document.querySelectorAll('.detalle-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => { p.style.display = 'none'; p.classList.remove('active'); });
+    const tabNotas  = document.querySelector('.detalle-tab:first-child');
+    const panelNotas = document.getElementById('panelNotas');
+    if (tabNotas)  tabNotas.classList.add('active');
+    if (panelNotas) { panelNotas.style.display = 'flex'; panelNotas.classList.add('active'); }
 
     const detalleInfo = document.getElementById('detalleInfoRows');
     if (detalleInfo) detalleInfo.innerHTML = '<div style="color:var(--gray);font-size:0.82rem;padding:8px 14px">Cargando...</div>';
@@ -283,8 +304,6 @@ async function abrirTicket(id) {
     try {
         ticketActual = await apiFetch(`/api/v2/tickets/${id}`);
         renderDetalleTicket(ticketActual);
-        // Cargar mensajes internos si el chat estaba abierto
-        if (chatInternoAbierto) cargarMensajesInternos();
     } catch (err) {
         showToast('Error', 'No se pudo cargar el ticket', 'error');
         volverALista();
@@ -293,47 +312,43 @@ async function abrirTicket(id) {
 
 function volverALista() {
     document.getElementById('vistaDetalle').style.display = 'none';
-    document.getElementById('vistaLista').style.display  = 'block';
+    document.getElementById('vistaLista').style.display   = 'block';
     ticketActual = null;
-    cerrarChatInterno();
+    comentariosArchivosSeleccionados = [];
     cargarTickets();
     cargarStats();
 }
 
 function renderDetalleTicket(ticket) {
-    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    const setEl  = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
 
-    setEl('detalleNumero', `#${ticket.numero}`);
-    setEl('detalleAsunto', ticket.asunto);
+    setEl('detalleNumero',  `#${ticket.numero}`);
+    setEl('detalleAsunto',  ticket.asunto);
     setVal('detalleEstadoSelect', ticket.estado);
 
     const btnEliminar = document.getElementById('btnEliminarTicket');
     if (btnEliminar) btnEliminar.style.display = isAdmin() ? '' : 'none';
 
-    const empresa    = ticket.empresas;
-    const dispositivo = ticket.dispositivos;
-
-    // ✅ Tiempo congelado al completar/facturar
-    const tiempoStr = formatHorasTranscurridas(ticket.horas_transcurridas || 0);
+    const tiempoStr    = formatHorasTranscurridas(ticket.horas_transcurridas || 0);
     const estadoCerrado = ticket.estado === 'Completado' || ticket.estado === 'Facturado';
-    const tiempoLabel = estadoCerrado
-        ? `<strong style="color:var(--gray)">${tiempoStr}</strong> <i class="fas fa-lock" style="font-size:0.75rem;color:var(--gray)" title="Tiempo cerrado — ${ticket.completed_at ? 'completado el ' + formatFechaLarga(ticket.completed_at) : ''}"></i>`
+    const tiempoLabel  = estadoCerrado
+        ? `<strong style="color:var(--gray)">${tiempoStr}</strong> <i class="fas fa-lock" style="font-size:0.75rem;color:var(--gray)"></i>`
         : `<strong style="color:var(--primary)">${tiempoStr}</strong>`;
 
     const infoRows = document.getElementById('detalleInfoRows');
     if (infoRows) {
         infoRows.innerHTML = `
-            ${infoRow('Empresa', escHtml(empresa?.nombre || '—'))}
+            ${infoRow('Empresa',   escHtml(ticket.empresas?.nombre || '—'))}
             ${infoRow('Prioridad', `<span class="prioridad-badge prioridad-${ticket.prioridad}">${prioridadIcon(ticket.prioridad)} ${ticket.prioridad}</span>`)}
-            ${infoRow('Estado', `<span class="estado-badge estado-${escHtml(ticket.estado)}">${estadoIcon(ticket.estado)} ${ticket.estado}</span>`)}
-            ${dispositivo ? infoRow('Equipo', `<i class="fas fa-desktop" style="color:var(--primary)"></i> ${escHtml(dispositivo.nombre)}`) : ''}
-            ${infoRow('⏱ Tiempo abierto', tiempoLabel)}
-            ${ticket.descripcion ? infoRow('Descripción', `<span style="white-space:pre-wrap">${escHtml(ticket.descripcion)}</span>`) : ''}
-            ${infoRow('Creado', formatFechaLarga(ticket.created_at))}
-            ${ticket.started_at   ? infoRow('Iniciado',   formatFechaLarga(ticket.started_at))   : ''}
-            ${ticket.completed_at ? infoRow('Completado', formatFechaLarga(ticket.completed_at)) : ''}
-            ${ticket.invoiced_at  ? infoRow('Facturado',  formatFechaLarga(ticket.invoiced_at))  : ''}
+            ${infoRow('Estado',    `<span class="estado-badge estado-${escHtml(ticket.estado)}">${estadoIcon(ticket.estado)} ${ticket.estado}</span>`)}
+            ${ticket.dispositivos ? infoRow('Equipo', `<i class="fas fa-desktop" style="color:var(--primary)"></i> ${escHtml(ticket.dispositivos.nombre)}`) : ''}
+            ${infoRow('⏱ Tiempo',  tiempoLabel)}
+            ${ticket.descripcion   ? infoRow('Descripción', `<span style="white-space:pre-wrap">${escHtml(ticket.descripcion)}</span>`) : ''}
+            ${infoRow('Creado',    formatFechaLarga(ticket.created_at))}
+            ${ticket.started_at    ? infoRow('Iniciado',   formatFechaLarga(ticket.started_at))   : ''}
+            ${ticket.completed_at  ? infoRow('Completado', formatFechaLarga(ticket.completed_at)) : ''}
+            ${ticket.invoiced_at   ? infoRow('Facturado',  formatFechaLarga(ticket.invoiced_at))  : ''}
         `;
     }
 
@@ -360,16 +375,13 @@ function renderOperariosDetalle(asignaciones) {
         return;
     }
     container.innerHTML = asignaciones.map(a => {
-        const nombre = a.profiles?.nombre || 'Desconocido';
-        const color = getAvatarColor(a.user_id);
-        const esSoloYo = a.user_id === currentUserId;
+        const nombre  = a.profiles?.nombre || 'Desconocido';
+        const color   = getAvatarColor(a.user_id);
+        const esMio   = a.user_id === currentUserId;
         return `<div class="operario-chip">
             <div class="avatar" style="background:${color}">${getInitials(nombre)}</div>
             <span class="operario-chip-nombre">${escHtml(nombre)}</span>
-            ${isAdmin() || esSoloYo ? `
-                <button class="btn-remove-operario" onclick="quitarOperario('${a.user_id}')" title="Quitar">
-                    <i class="fas fa-times"></i>
-                </button>` : ''}
+            ${isAdmin() || esMio ? `<button class="btn-remove-operario" onclick="quitarOperario('${a.user_id}')" title="Quitar"><i class="fas fa-times"></i></button>` : ''}
         </div>`;
     }).join('');
 }
@@ -405,24 +417,17 @@ function renderHistorialDetalle(historial) {
         return;
     }
 
-    // Ordenar cronológicamente (más reciente al final)
     const sorted = [...historial].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const colorMap = {
+        creacion: '#22c55e', estado: '#3b82f6', asignacion: '#9333ea',
+        desasignacion: '#f59e0b', prioridad: '#f59e0b', archivo: '#0891b2',
+        horas: '#16a34a', comentario: '#0066ff',
+    };
 
     container.innerHTML = sorted.map(h => {
-        if (h.tipo === 'nota_interna') return ''; // Las notas internas van en el chat
-
-        const icon = historialTipoIcon(h.tipo);
-        const colorMap = {
-            creacion: '#22c55e',
-            estado: '#3b82f6',
-            asignacion: '#9333ea',
-            desasignacion: '#f59e0b',
-            prioridad: '#f59e0b',
-            archivo: '#0891b2',
-            horas: '#16a34a',
-        };
+        if (h.tipo === 'nota_interna') return '';
+        const icon  = historialTipoIcon(h.tipo);
         const color = colorMap[h.tipo] || '#94a3b8';
-
         return `<div class="historial-item">
             <div class="historial-icon" style="background:${color}20;color:${color}"><i class="fas fa-${icon}"></i></div>
             <div class="historial-texto">
@@ -434,7 +439,7 @@ function renderHistorialDetalle(historial) {
 }
 
 function toggleHistorial() {
-    const el = document.getElementById('detalleHistorial');
+    const el      = document.getElementById('detalleHistorial');
     const chevron = document.getElementById('historialChevron');
     if (!el) return;
     const visible = el.style.display !== 'none';
@@ -472,97 +477,212 @@ function onNotasChange() {
 }
 
 // ============================================
-// CHAT INTERNO
+// COMENTARIOS — CARGA Y RENDER
 // ============================================
-function toggleChatInterno() {
-    chatInternoAbierto = !chatInternoAbierto;
-    const panel = document.getElementById('chatInternoPanel');
-    const btn   = document.getElementById('btnChatInterno');
-    if (chatInternoAbierto) {
-        panel.style.display = 'flex';
-        if (btn) btn.classList.add('active');
-        cargarMensajesInternos();
-        const input = document.getElementById('chatInternoInput');
-        if (input) input.focus();
-    } else {
-        cerrarChatInterno();
+async function cargarComentarios() {
+    if (!ticketActual) return;
+
+    const lista = document.getElementById('comentariosLista');
+    if (lista) lista.innerHTML = '<div class="comentarios-loading"><i class="fas fa-spinner fa-spin"></i> Cargando comentarios...</div>';
+
+    try {
+        const comentarios = await apiFetch(`/api/v2/tickets/${ticketActual.id}/comentarios`);
+        renderComentarios(comentarios);
+
+        // Actualizar badge del tab
+        const badge = document.getElementById('comentariosBadge');
+        if (badge) {
+            badge.textContent = comentarios.length;
+            badge.style.display = comentarios.length > 0 ? 'inline-flex' : 'none';
+        }
+    } catch (err) {
+        if (lista) lista.innerHTML = `<div class="comentarios-loading" style="color:#dc2626"><i class="fas fa-exclamation-circle"></i> Error al cargar comentarios</div>`;
     }
 }
 
-function cerrarChatInterno() {
-    chatInternoAbierto = false;
-    const panel = document.getElementById('chatInternoPanel');
-    const btn   = document.getElementById('btnChatInterno');
-    if (panel) panel.style.display = 'none';
-    if (btn)   btn.classList.remove('active');
-}
+function renderComentarios(comentarios) {
+    const lista = document.getElementById('comentariosLista');
+    if (!lista) return;
 
-function cargarMensajesInternos() {
-    if (!ticketActual) return;
-    const historial = ticketActual.ticket_historial || [];
-    const notas = historial.filter(h => h.tipo === 'nota_interna');
-    renderMensajesInternos(notas);
-}
-
-function renderMensajesInternos(mensajes) {
-    const container = document.getElementById('chatInternoMensajes');
-    if (!container) return;
-
-    if (!mensajes.length) {
-        container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--gray);font-size:0.88rem">
-            <i class="fas fa-lock" style="display:block;font-size:1.8rem;opacity:0.3;margin-bottom:8px"></i>
-            Sin notas internas aún
-        </div>`;
+    if (!comentarios.length) {
+        lista.innerHTML = `
+            <div class="comentarios-empty">
+                <i class="fas fa-comments"></i>
+                <p>Sin comentarios aún</p>
+                <span>Sé el primero en añadir un comentario a este ticket</span>
+            </div>`;
         return;
     }
 
-    const sorted = [...mensajes].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    container.innerHTML = sorted.map(m => {
-        const esPropio = m.user_id === currentUserId;
-        const nombre = m.profiles?.nombre || 'Desconocido';
-        const color = m.user_id ? getAvatarColor(m.user_id) : '#9333ea';
-        return `<div class="chat-interno-msg ${esPropio ? 'propio' : ''}">
-            <div class="chat-interno-avatar" style="background:${color}">${getInitials(nombre)}</div>
-            <div class="chat-interno-bubble">
-                <div class="chat-interno-autor">${escHtml(nombre)}</div>
-                <div class="chat-interno-texto">${escHtml(m.descripcion)}</div>
-                <div class="chat-interno-fecha">${formatFechaLarga(m.created_at)}</div>
-            </div>
-        </div>`;
-    }).join('');
-    container.scrollTop = container.scrollHeight;
+    lista.innerHTML = comentarios.map(c => renderComentarioItem(c)).join('');
 }
 
-async function enviarMensajeInterno() {
-    if (!ticketActual) return;
-    const input = document.getElementById('chatInternoInput');
-    if (!input) return;
-    const texto = input.value.trim();
-    if (!texto) return;
+function renderComentarioItem(c) {
+    const nombre    = c.profiles?.nombre || 'Desconocido';
+    const color     = getAvatarColor(c.user_id);
+    const esMio     = c.user_id === currentUserId;
+    const archivos  = c.ticket_comentarios_archivos || [];
 
-    // Deshabilitar mientras se envía
-    input.disabled = true;
-    try {
-        await apiFetch(`/api/v2/tickets/${ticketActual.id}/notas-internas`, {
-            method: 'POST',
-            body: JSON.stringify({ texto }),
-        });
-        input.value = '';
-        // Recargar ticket para mostrar la nota
-        ticketActual = await apiFetch(`/api/v2/tickets/${ticketActual.id}`);
-        cargarMensajesInternos();
-    } catch (err) {
-        showToast('Error', err.message, 'error');
-    } finally {
-        input.disabled = false;
-        input.focus();
+    const archivosHtml = archivos.length ? `
+        <div class="comentario-archivos">
+            ${archivos.map(a => `
+                <div class="comentario-archivo-chip" onclick="descargarArchivoComentario('${a.id}', '${escHtml(a.nombre_original)}')" title="${escHtml(a.nombre_original)}">
+                    ${iconoArchivo(a.mime_type)}
+                    <span>${escHtml(a.nombre_original)}</span>
+                    <small>${formatBytes(a.tamanio)}</small>
+                </div>
+            `).join('')}
+        </div>` : '';
+
+    return `<div class="comentario-item" id="comentario-${c.id}">
+        <div class="comentario-avatar" style="background:${color}">${getInitials(nombre)}</div>
+        <div class="comentario-cuerpo">
+            <div class="comentario-meta">
+                <span class="comentario-autor">${escHtml(nombre)}</span>
+                <span class="comentario-fecha">${formatFechaLarga(c.created_at)}</span>
+                ${c.editado ? '<span class="comentario-editado">(editado)</span>' : ''}
+                ${esMio || isAdmin() ? `
+                    <div class="comentario-acciones">
+                        <button onclick="eliminarComentario('${c.id}')" title="Eliminar" class="btn-comentario-accion btn-comentario-delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>` : ''}
+            </div>
+            <div class="comentario-texto">${escHtml(c.contenido)}</div>
+            ${archivosHtml}
+        </div>
+    </div>`;
+}
+
+// ============================================
+// COMENTARIOS — NUEVO COMENTARIO
+// ============================================
+function triggerComentarioArchivo() {
+    const input = document.getElementById('comentarioArchivoInput');
+    if (input) input.click();
+}
+
+function onComentarioArchivosSeleccionados() {
+    const input = document.getElementById('comentarioArchivoInput');
+    if (!input?.files?.length) return;
+
+    // Añadir a la lista de pendientes
+    Array.from(input.files).forEach(f => {
+        comentariosArchivosSeleccionados.push(f);
+    });
+    input.value = ''; // Limpiar para permitir re-selección
+    actualizarPreviewArchivosComentario();
+}
+
+function actualizarPreviewArchivosComentario() {
+    const preview   = document.getElementById('comentarioArchivosPreview');
+    const countEl   = document.getElementById('comentarioArchivosCount');
+    if (!preview) return;
+
+    if (!comentariosArchivosSeleccionados.length) {
+        preview.style.display = 'none';
+        if (countEl) countEl.textContent = '';
+        return;
+    }
+
+    preview.style.display = 'flex';
+    if (countEl) countEl.textContent = `${comentariosArchivosSeleccionados.length} archivo(s)`;
+
+    preview.innerHTML = comentariosArchivosSeleccionados.map((f, i) => `
+        <div class="archivo-preview-chip">
+            ${iconoArchivo(f.type)}
+            <span>${escHtml(f.name)}</span>
+            <small>${formatBytes(f.size)}</small>
+            <button onclick="quitarArchivoComentario(${i})" title="Quitar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function quitarArchivoComentario(index) {
+    comentariosArchivosSeleccionados.splice(index, 1);
+    actualizarPreviewArchivosComentario();
+}
+
+function handleComentarioKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        enviarComentario();
     }
 }
 
-function handleChatInternoKeydown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        enviarMensajeInterno();
+async function enviarComentario() {
+    if (!ticketActual) return;
+    const textarea = document.getElementById('nuevoComentarioTexto');
+    if (!textarea) return;
+
+    const texto    = textarea.value.trim();
+    const archivos = comentariosArchivosSeleccionados;
+
+    if (!texto && !archivos.length) {
+        showToast('Aviso', 'Escribe algo o adjunta un archivo', 'warning');
+        return;
+    }
+
+    const btn = document.querySelector('.comentario-nuevo .btn-primary');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...'; }
+
+    try {
+        const formData = new FormData();
+        formData.append('contenido', texto);
+        archivos.forEach(f => formData.append('files', f));
+
+        const res = await fetch(`${API_URL}/api/v2/tickets/${ticketActual.id}/comentarios`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${sessionStorage.getItem('hola_token')}` },
+            body: formData,
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: `Error ${res.status}` }));
+            throw new Error(err.error);
+        }
+
+        // Limpiar formulario
+        textarea.value = '';
+        comentariosArchivosSeleccionados = [];
+        actualizarPreviewArchivosComentario();
+
+        // Recargar comentarios
+        await cargarComentarios();
+
+        // Scroll al final
+        const lista = document.getElementById('comentariosLista');
+        if (lista) lista.scrollTop = lista.scrollHeight;
+
+        showToast('Comentario añadido', '', 'success');
+    } catch (err) {
+        showToast('Error', err.message, 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Comentar'; }
+    }
+}
+
+async function eliminarComentario(comentarioId) {
+    if (!confirm('¿Eliminar este comentario?')) return;
+    try {
+        await apiFetch(`/api/v2/comentarios/${comentarioId}`, { method: 'DELETE' });
+        showToast('Comentario eliminado', '', 'success');
+        await cargarComentarios();
+    } catch (err) {
+        showToast('Error', err.message, 'error');
+    }
+}
+
+async function descargarArchivoComentario(archivoId, nombre) {
+    try {
+        const { url } = await apiFetch(`/api/v2/comentarios/archivos/${archivoId}/url`);
+        const a = document.createElement('a');
+        a.href = url; a.download = nombre; a.target = '_blank';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    } catch (err) {
+        showToast('Error', 'No se pudo descargar el archivo', 'error');
     }
 }
 
@@ -581,7 +701,6 @@ async function cambiarEstado(nuevoEstado) {
         renderDetalleTicket(ticketActual);
     } catch (err) {
         showToast('Error', err.message, 'error');
-        // Revertir el select
         const sel = document.getElementById('detalleEstadoSelect');
         if (sel && ticketActual) sel.value = ticketActual.estado;
     }
@@ -605,12 +724,8 @@ async function descargarArchivo(archivoId, nombre) {
     try {
         const { url } = await apiFetch(`/api/v2/archivos/${archivoId}/url`);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = nombre;
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        a.href = url; a.download = nombre; a.target = '_blank';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
     } catch (err) {
         showToast('Error', 'No se pudo descargar el archivo', 'error');
     }
@@ -633,46 +748,31 @@ function triggerUploadArchivo() {
     if (input) input.click();
 }
 
-// ✅ FIX CRÍTICO: Upload de archivos corregido
 async function subirArchivos() {
     const input = document.getElementById('archivoInput');
     if (!input?.files?.length || !ticketActual) return;
 
     const archivosContainer = document.getElementById('detalleArchivos');
-    if (archivosContainer) {
-        archivosContainer.innerHTML = '<div style="color:var(--gray);font-size:0.82rem;padding:8px 14px"><i class="fas fa-spinner fa-spin"></i> Subiendo archivos...</div>';
-    }
+    if (archivosContainer) archivosContainer.innerHTML = '<div style="color:var(--gray);font-size:0.82rem;padding:8px 14px"><i class="fas fa-spinner fa-spin"></i> Subiendo...</div>';
 
     const formData = new FormData();
     Array.from(input.files).forEach(f => formData.append('files', f));
 
     try {
-        // ✅ FIX: No usar apiFetch para FormData — necesitamos control manual del Content-Type
         const res = await fetch(`${API_URL}/api/v2/tickets/${ticketActual.id}/archivos`, {
             method: 'POST',
-            headers: {
-                // NO incluir Content-Type — el browser lo pone automáticamente con boundary
-                'Authorization': `Bearer ${sessionStorage.getItem('hola_token')}`,
-            },
+            headers: { 'Authorization': `Bearer ${sessionStorage.getItem('hola_token')}` },
             body: formData,
         });
-
-        if (!res.ok) {
-            const errorData = await res.json().catch(() => ({ error: `Error ${res.status}` }));
-            throw new Error(errorData.error || `Error ${res.status}`);
-        }
-
+        if (!res.ok) { const e = await res.json().catch(() => ({ error: `Error ${res.status}` })); throw new Error(e.error); }
         const data = await res.json();
-        input.value = ''; // limpiar el input
-
+        input.value = '';
         ticketActual = await apiFetch(`/api/v2/tickets/${ticketActual.id}`);
         renderArchivosDetalle(ticketActual.ticket_archivos || []);
         renderHistorialDetalle(ticketActual.ticket_historial || []);
         showToast('Archivos subidos', `${data.length} archivo(s) añadido(s)`, 'success');
     } catch (err) {
-        console.error('Error subiendo archivos:', err);
         showToast('Error al subir archivos', err.message, 'error');
-        // Restaurar lista de archivos
         if (ticketActual) renderArchivosDetalle(ticketActual.ticket_archivos || []);
     }
 }
@@ -710,19 +810,16 @@ function abrirModalNuevoTicket() {
     const titleEl = document.getElementById('ticketModalTitle');
     if (titleEl) titleEl.innerHTML = '<i class="fas fa-ticket-alt"></i> Nuevo Ticket';
 
-    const campos = ['ticketEmpresa','ticketAsunto','ticketDescripcion'];
-    campos.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    ['ticketEmpresa','ticketAsunto','ticketDescripcion'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 
     const dispSel = document.getElementById('ticketDispositivo');
     if (dispSel) dispSel.innerHTML = '<option value="">Sin dispositivo</option>';
-
-    const prioEl = document.getElementById('ticketPrioridad');
+    const prioEl  = document.getElementById('ticketPrioridad');
     if (prioEl) prioEl.value = 'Media';
     const estadoEl = document.getElementById('ticketEstado');
     if (estadoEl) estadoEl.value = 'Pendiente';
 
     renderOperariosCheckboxes('operariosCheckboxes', []);
-
     const modal = document.getElementById('ticketModal');
     if (modal) modal.style.display = 'flex';
 }
@@ -730,18 +827,18 @@ function abrirModalNuevoTicket() {
 async function abrirModalEditarTicket() {
     if (!ticketActual) return;
     const t = ticketActual;
-
     const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-    setVal('editTicketId', t.id);
+
+    setVal('editTicketId',    t.id);
     const titleEl = document.getElementById('ticketModalTitle');
     if (titleEl) titleEl.innerHTML = `<i class="fas fa-edit"></i> Editar Ticket #${t.numero}`;
-    setVal('ticketEmpresa', t.empresa_id);
+    setVal('ticketEmpresa',    t.empresa_id);
     await cargarDispositivosEmpresa();
     setVal('ticketDispositivo', t.dispositivo_id);
-    setVal('ticketAsunto', t.asunto);
+    setVal('ticketAsunto',     t.asunto);
     setVal('ticketDescripcion', t.descripcion);
-    setVal('ticketPrioridad', t.prioridad);
-    setVal('ticketEstado', t.estado);
+    setVal('ticketPrioridad',  t.prioridad);
+    setVal('ticketEstado',     t.estado);
 
     const asignadosIds = (t.ticket_asignaciones || []).map(a => a.user_id);
     renderOperariosCheckboxes('operariosCheckboxes', asignadosIds);
@@ -773,16 +870,12 @@ async function guardarTicket() {
     const prioridad      = document.getElementById('ticketPrioridad')?.value || 'Media';
     const estado         = document.getElementById('ticketEstado')?.value || 'Pendiente';
 
-    if (!empresa_id || !asunto) {
-        showToast('Error', 'Empresa y asunto son obligatorios', 'error');
-        return;
-    }
+    if (!empresa_id || !asunto) { showToast('Error', 'Empresa y asunto son obligatorios', 'error'); return; }
 
     const operariosSeleccionados = Array.from(
         document.querySelectorAll('#operariosCheckboxes .operario-check-item.checked')
     ).map(el => el.dataset.userId);
 
-    // Deshabilitar botón guardar
     const btn = document.querySelector('#ticketModal .btn-primary');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
 
@@ -792,17 +885,14 @@ async function guardarTicket() {
                 method: 'PUT',
                 body: JSON.stringify({ asunto, descripcion, prioridad, estado, dispositivo_id: dispositivo_id || null }),
             });
-
             if (operariosSeleccionados.length > 0) {
                 await apiFetch(`/api/v2/tickets/${id}/asignaciones`, {
                     method: 'POST',
                     body: JSON.stringify({ operarios: operariosSeleccionados }),
                 });
             }
-
             showToast('Ticket actualizado', '', 'success');
-
-            if (ticketActual && ticketActual.id === id) {
+            if (ticketActual?.id === id) {
                 ticketActual = await apiFetch(`/api/v2/tickets/${id}`);
                 renderDetalleTicket(ticketActual);
             }
@@ -813,7 +903,6 @@ async function guardarTicket() {
             });
             showToast('Ticket creado', asunto, 'success');
         }
-
         cerrarModalTicket();
         await cargarTickets();
         await cargarStats();
@@ -844,10 +933,7 @@ async function guardarAsignaciones() {
         document.querySelectorAll('#asignarOperariosLista .operario-check-item.checked')
     ).map(el => el.dataset.userId);
 
-    if (!seleccionados.length) {
-        showToast('Info', 'Selecciona al menos un operario', 'warning');
-        return;
-    }
+    if (!seleccionados.length) { showToast('Info', 'Selecciona al menos un operario', 'warning'); return; }
 
     try {
         await apiFetch(`/api/v2/tickets/${ticketActual.id}/asignaciones`, {
@@ -870,8 +956,7 @@ function renderOperariosCheckboxes(containerId, selectedIds) {
     container.innerHTML = operarios.map(op => {
         const color   = getAvatarColor(op.id);
         const checked = selectedIds.includes(op.id);
-        return `<div class="operario-check-item ${checked ? 'checked' : ''}" data-user-id="${op.id}"
-                     onclick="toggleOperarioCheck(this)">
+        return `<div class="operario-check-item ${checked ? 'checked' : ''}" data-user-id="${op.id}" onclick="toggleOperarioCheck(this)">
             <div class="operario-check-avatar" style="background:${color}">${getInitials(op.nombre)}</div>
             <span class="operario-check-nombre">${escHtml(op.nombre)}</span>
             <span class="operario-check-rol" style="font-size:0.75rem;color:var(--gray)">${op.rol}</span>
@@ -915,28 +1000,23 @@ function limpiarFechas() {
 function escHtml(str) {
     if (str == null) return '';
     return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function formatFecha(isoStr) {
     if (!isoStr) return '—';
-    const d = new Date(isoStr);
-    return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    return new Date(isoStr).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 }
 
 function formatFechaLarga(isoStr) {
     if (!isoStr) return '—';
-    const d = new Date(isoStr);
-    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return new Date(isoStr).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function formatHorasTranscurridas(horas) {
     if (!horas || horas <= 0) return '< 1h';
-    if (horas < 1) return `${Math.round(horas * 60)}min`;
+    if (horas < 1)  return `${Math.round(horas * 60)}min`;
     if (horas < 24) return `${horas.toFixed(1)}h`;
     const dias = Math.floor(horas / 24);
     const restH = Math.round(horas % 24);
@@ -954,13 +1034,8 @@ function formatBytes(bytes) {
 }
 
 function prioridadIcon(p) {
-    const icons = {
-        Baja:    '<i class="fas fa-circle" style="color:#22c55e;font-size:0.7rem"></i>',
-        Media:   '<i class="fas fa-circle" style="color:#3b82f6;font-size:0.7rem"></i>',
-        Alta:    '<i class="fas fa-circle" style="color:#f59e0b;font-size:0.7rem"></i>',
-        Urgente: '<i class="fas fa-circle" style="color:#ef4444;font-size:0.7rem"></i>',
-    };
-    return icons[p] || '';
+    const icons = { Baja: '#22c55e', Media: '#3b82f6', Alta: '#f59e0b', Urgente: '#ef4444' };
+    return `<i class="fas fa-circle" style="color:${icons[p]||'#94a3b8'};font-size:0.7rem"></i>`;
 }
 
 function estadoIcon(e) {
@@ -975,28 +1050,19 @@ function estadoIcon(e) {
 
 function iconoArchivo(mime) {
     if (!mime) return '<i class="fas fa-paperclip"></i>';
-    if (mime.startsWith('image/'))                          return '<i class="fas fa-image" style="color:#3b82f6"></i>';
-    if (mime === 'application/pdf')                         return '<i class="fas fa-file-pdf" style="color:#ef4444"></i>';
-    if (mime.includes('word'))                              return '<i class="fas fa-file-word" style="color:#2563eb"></i>';
-    if (mime.includes('excel') || mime.includes('sheet'))   return '<i class="fas fa-file-excel" style="color:#16a34a"></i>';
-    if (mime.includes('zip') || mime.includes('compressed'))return '<i class="fas fa-file-archive" style="color:#d97706"></i>';
-    if (mime.startsWith('video/'))                          return '<i class="fas fa-file-video" style="color:#9333ea"></i>';
-    if (mime.startsWith('audio/'))                          return '<i class="fas fa-file-audio" style="color:#0891b2"></i>';
+    if (mime.startsWith('image/'))                           return '<i class="fas fa-image" style="color:#3b82f6"></i>';
+    if (mime === 'application/pdf')                          return '<i class="fas fa-file-pdf" style="color:#ef4444"></i>';
+    if (mime.includes('word'))                               return '<i class="fas fa-file-word" style="color:#2563eb"></i>';
+    if (mime.includes('excel') || mime.includes('sheet'))    return '<i class="fas fa-file-excel" style="color:#16a34a"></i>';
+    if (mime.includes('zip') || mime.includes('compressed')) return '<i class="fas fa-file-archive" style="color:#d97706"></i>';
+    if (mime.startsWith('video/'))                           return '<i class="fas fa-file-video" style="color:#9333ea"></i>';
+    if (mime.startsWith('audio/'))                           return '<i class="fas fa-file-audio" style="color:#0891b2"></i>';
     return '<i class="fas fa-file" style="color:#64748b"></i>';
 }
 
 function historialTipoIcon(tipo) {
-    const icons = {
-        creacion:      'star',
-        estado:        'exchange-alt',
-        asignacion:    'user-plus',
-        desasignacion: 'user-minus',
-        prioridad:     'flag',
-        horas:         'clock',
-        archivo:       'paperclip',
-        nota_interna:  'lock',
-    };
-    return icons[tipo] || 'circle';
+    return { creacion: 'star', estado: 'exchange-alt', asignacion: 'user-plus', desasignacion: 'user-minus',
+             prioridad: 'flag', horas: 'clock', archivo: 'paperclip', comentario: 'comment' }[tipo] || 'circle';
 }
 
 // ============================================
@@ -1021,17 +1087,12 @@ function showToast(title, message, type = 'success') {
 }
 
 // ============================================
-// CERRAR MODALES
+// CERRAR MODALES con ESC / click fuera
 // ============================================
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-        cerrarChatInterno();
-    }
+    if (e.key === 'Escape') document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
 });
 
 document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', e => {
-        if (e.target === modal) modal.style.display = 'none';
-    });
+    modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
 });

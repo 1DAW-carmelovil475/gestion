@@ -24,6 +24,7 @@
         <a href="./gestion_usuarios.html#usuarios" class="nav-link" data-admin-only><i class="fas fa-users-cog"></i> Usuarios</a>
         <a href="./tickets.html" class="nav-link active"><i class="fas fa-headset"></i> Tickets</a>
         <a href="./estadisticas.html" class="nav-link" data-admin-only><i class="fas fa-chart-bar"></i> Estadísticas</a>
+        <a href="./chat.html" class="nav-link"><i class="fas fa-comments"></i> Chat</a>
     </nav>
     <div class="user-area">
         <div class="user-info">
@@ -42,7 +43,8 @@
     <a class="bottom-nav-item" href="./gestion_usuarios.html"><i class="fas fa-building"></i><span>Empresas</span></a>
     <a class="bottom-nav-item" href="./gestion_usuarios.html#usuarios" data-admin-only><i class="fas fa-users-cog"></i><span>Usuarios</span></a>
     <a class="bottom-nav-item active"><i class="fas fa-headset"></i><span>Tickets</span></a>
-    <a class="bottom-nav-item" href="./estadisticas.html" data-admin-only><i class="fas fa-chart-bar"></i><span>Estadísticas</span></a>
+    <a class="bottom-nav-item" href="./estadisticas.html" data-admin-only><i class="fas fa-chart-bar"></i><span>Stats</span></a>
+    <a class="bottom-nav-item" href="./chat.html"><i class="fas fa-comments"></i><span>Chat</span></a>
 </nav>
 
 <!-- MAIN: VISTA LISTA -->
@@ -184,17 +186,13 @@
             <button class="btn-action btn-edit" onclick="abrirModalEditarTicket()" title="Editar">
                 <i class="fas fa-edit"></i> <span>Editar</span>
             </button>
-            <!-- BOTÓN CHAT INTERNO -->
-            <button id="btnChatInterno" class="btn-chat-interno" onclick="toggleChatInterno()" title="Notas internas del equipo">
-                <i class="fas fa-lock"></i> <span>Chat interno</span>
-            </button>
             <button class="btn-action btn-delete" id="btnEliminarTicket" onclick="eliminarTicket()" title="Eliminar">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
     </div>
 
-    <!-- Cuerpo: sidebar + notas (bloc) + chat interno flotante -->
+    <!-- Cuerpo: sidebar + área principal (notas + comentarios) -->
     <div class="detalle-body">
 
         <!-- COLUMNA IZQUIERDA: info + operarios + archivos + historial -->
@@ -215,7 +213,7 @@
 
             <div class="sidebar-card">
                 <div class="sidebar-card-title">
-                    <span><i class="fas fa-paperclip"></i> Archivos</span>
+                    <span><i class="fas fa-paperclip"></i> Archivos del ticket</span>
                     <button class="btn-mini" onclick="triggerUploadArchivo()"><i class="fas fa-upload"></i></button>
                 </div>
                 <input type="file" id="archivoInput" multiple style="display:none" onchange="subirArchivos()">
@@ -232,52 +230,79 @@
 
         </aside>
 
-        <!-- COLUMNA DERECHA: NOTAS como bloc de notas -->
-        <div class="detalle-notas-area">
-            <div class="notas-header">
-                <div style="display:flex;align-items:center;gap:8px">
-                    <i class="fas fa-sticky-note" style="color:var(--primary)"></i>
-                    <span style="font-weight:700;font-size:0.9rem;color:var(--dark)">Notas del ticket</span>
+        <!-- COLUMNA DERECHA: NOTAS + COMENTARIOS (tabs) -->
+        <div class="detalle-main-area">
+
+            <!-- TABS -->
+            <div class="detalle-tabs">
+                <button class="detalle-tab active" onclick="switchTab('notas', this)">
+                    <i class="fas fa-sticky-note"></i> Notas privadas
+                </button>
+                <button class="detalle-tab" onclick="switchTab('comentarios', this)">
+                    <i class="fas fa-comments"></i> Comentarios
+                    <span class="tab-badge" id="comentariosBadge" style="display:none">0</span>
+                </button>
+            </div>
+
+            <!-- PANEL: NOTAS -->
+            <div id="panelNotas" class="tab-panel active">
+                <div class="notas-header">
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <i class="fas fa-sticky-note" style="color:var(--primary)"></i>
+                        <span style="font-weight:600;font-size:0.88rem;color:var(--dark)">Notas privadas del ticket</span>
+                    </div>
+                    <span id="notasIndicador" style="font-size:0.78rem;color:var(--gray);font-style:italic"></span>
                 </div>
-                <span id="notasIndicador" style="font-size:0.78rem;color:var(--gray);font-style:italic"></span>
+                <textarea
+                    id="detalleNotas"
+                    class="notas-textarea"
+                    placeholder="Notas privadas — solo visibles para el equipo. Se guardan automáticamente."
+                    oninput="onNotasChange()"
+                ></textarea>
             </div>
-            <textarea
-                id="detalleNotas"
-                class="notas-textarea"
-                placeholder="Escribe aquí tus notas sobre este ticket... Se guardan automáticamente."
-                oninput="onNotasChange()"
-            ></textarea>
-        </div>
 
-    </div>
+            <!-- PANEL: COMENTARIOS -->
+            <div id="panelComentarios" class="tab-panel" style="display:none">
+                <!-- Lista de comentarios -->
+                <div id="comentariosLista" class="comentarios-lista">
+                    <div class="comentarios-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Cargando comentarios...
+                    </div>
+                </div>
 
-    <!-- PANEL CHAT INTERNO (lateral derecho, desplegable) -->
-    <div id="chatInternoPanel" class="chat-interno-panel" style="display:none">
-        <div class="chat-interno-header">
-            <div style="display:flex;align-items:center;gap:8px">
-                <i class="fas fa-lock" style="color:#9333ea"></i>
-                <span style="font-weight:700;color:var(--dark)">Chat interno del equipo</span>
+                <!-- Formulario nuevo comentario -->
+                <div class="comentario-nuevo">
+                    <div class="comentario-nuevo-header">
+                        <div id="comentarioAutorAvatar" class="avatar-sm"></div>
+                        <span id="comentarioAutorNombre" style="font-size:0.82rem;font-weight:600;color:var(--dark)"></span>
+                    </div>
+                    <textarea
+                        id="nuevoComentarioTexto"
+                        class="comentario-textarea"
+                        placeholder="Escribe un comentario... (Shift+Enter para salto de línea, Enter para enviar)"
+                        rows="3"
+                        onkeydown="handleComentarioKeydown(event)"
+                    ></textarea>
+
+                    <!-- Archivos adjuntos preview -->
+                    <div id="comentarioArchivosPreview" class="archivos-preview" style="display:none"></div>
+
+                    <div class="comentario-actions-bar">
+                        <div class="comentario-attach-area">
+                            <button class="btn-attach" onclick="triggerComentarioArchivo()" title="Adjuntar archivo">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            <span id="comentarioArchivosCount" style="font-size:0.78rem;color:var(--gray)"></span>
+                        </div>
+                        <button class="btn-primary btn-sm" onclick="enviarComentario()">
+                            <i class="fas fa-paper-plane"></i> Comentar
+                        </button>
+                    </div>
+                    <input type="file" id="comentarioArchivoInput" multiple style="display:none" onchange="onComentarioArchivosSeleccionados()">
+                </div>
             </div>
-            <button class="modal-close" onclick="cerrarChatInterno()"><i class="fas fa-times"></i></button>
-        </div>
-        <div id="chatInternoMensajes" class="chat-interno-mensajes">
-            <div style="text-align:center;padding:30px;color:var(--gray);font-size:0.88rem">
-                <i class="fas fa-lock" style="display:block;font-size:1.8rem;opacity:0.3;margin-bottom:8px"></i>
-                Las notas internas son solo visibles para el equipo
-            </div>
-        </div>
-        <div class="chat-interno-input-area">
-            <textarea
-                id="chatInternoInput"
-                class="chat-input"
-                placeholder="Nota interna (solo visible para el equipo)..."
-                rows="2"
-                onkeydown="handleChatInternoKeydown(event)"
-            ></textarea>
-            <button class="chat-send-btn" onclick="enviarMensajeInterno()" style="background:linear-gradient(135deg,#9333ea,#7e22ce)">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
+
+        </div><!-- fin detalle-main-area -->
     </div>
 
 </div>

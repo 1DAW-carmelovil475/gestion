@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Interno | Hola Informática</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0047b3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./css/gestion_usuarios.css">
+    <link rel="stylesheet" href="./css/chat.css">
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+    <div class="logo">
+        <img src="./img/logoHola.png" alt="Logo Hola Informática">
+        <span class="logo-text">Hola Informática</span>
+    </div>
+    <nav class="top-nav">
+        <a href="./gestion_usuarios.html" class="nav-link"><i class="fas fa-building"></i> Empresas</a>
+        <a href="./gestion_usuarios.html#usuarios" class="nav-link" data-admin-only><i class="fas fa-users-cog"></i> Usuarios</a>
+        <a href="./tickets.html" class="nav-link"><i class="fas fa-headset"></i> Tickets</a>
+        <a href="./estadisticas.html" class="nav-link" data-admin-only><i class="fas fa-chart-bar"></i> Estadísticas</a>
+        <a href="./chat.html" class="nav-link active"><i class="fas fa-comments"></i> Chat</a>
+    </nav>
+    <div class="user-area">
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span id="usuarioNombre" class="user-name-text">Cargando...</span>
+        </div>
+        <button id="logoutBtn" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="logout-text">Salir</span>
+        </button>
+    </div>
+</header>
+
+<!-- BOTTOM NAV MOBILE -->
+<nav class="bottom-nav">
+    <a class="bottom-nav-item" href="./gestion_usuarios.html"><i class="fas fa-building"></i><span>Empresas</span></a>
+    <a class="bottom-nav-item" href="./gestion_usuarios.html#usuarios" data-admin-only><i class="fas fa-users-cog"></i><span>Usuarios</span></a>
+    <a class="bottom-nav-item" href="./tickets.html"><i class="fas fa-headset"></i><span>Tickets</span></a>
+    <a class="bottom-nav-item" href="./estadisticas.html" data-admin-only><i class="fas fa-chart-bar"></i><span>Stats</span></a>
+    <a class="bottom-nav-item active"><i class="fas fa-comments"></i><span>Chat</span></a>
+</nav>
+
+<!-- LAYOUT PRINCIPAL DEL CHAT -->
+<main class="chat-layout">
+
+    <!-- SIDEBAR: Lista de canales -->
+    <aside class="chat-sidebar" id="chatSidebar">
+        <div class="chat-sidebar-header">
+            <div class="chat-workspace-info">
+                <div class="workspace-icon"><i class="fas fa-comments"></i></div>
+                <div>
+                    <div class="workspace-name">Chat del equipo</div>
+                    <div class="workspace-sub">Hola Informática</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección canales -->
+        <div class="canal-section">
+            <div class="canal-section-header">
+                <span>Canales</span>
+                <button class="btn-canal-nuevo" onclick="abrirModalNuevoCanal()" title="Nuevo canal">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <div id="canalesList" class="canales-list">
+                <div class="canal-loading"><i class="fas fa-spinner fa-spin"></i></div>
+            </div>
+        </div>
+
+        <!-- Sección conversaciones directas -->
+        <div class="canal-section">
+            <div class="canal-section-header">
+                <span>Mensajes directos</span>
+                <button class="btn-canal-nuevo" onclick="abrirModalNuevoDirecto()" title="Nuevo mensaje directo">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <div id="directosList" class="canales-list">
+                <!-- Se rellenan con los canales tipo "directo" -->
+            </div>
+        </div>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL: mensajes del canal seleccionado -->
+    <section class="chat-main" id="chatMain">
+
+        <!-- Estado vacío (sin canal seleccionado) -->
+        <div id="chatEmpty" class="chat-empty">
+            <div class="chat-empty-icon"><i class="fas fa-comments"></i></div>
+            <h2>Bienvenido al chat del equipo</h2>
+            <p>Selecciona un canal de la barra lateral para empezar a chatear</p>
+        </div>
+
+        <!-- Vista de canal activo -->
+        <div id="chatCanalActivo" style="display:none;flex-direction:column;height:100%">
+
+            <!-- Header del canal -->
+            <div class="chat-canal-header">
+                <button class="btn-back-canal mobile-only" onclick="volverASidebar()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="chat-canal-info">
+                    <div class="chat-canal-icono" id="canalIcono"><i class="fas fa-hashtag"></i></div>
+                    <div>
+                        <div class="chat-canal-nombre" id="canalNombre">Canal</div>
+                        <div class="chat-canal-desc" id="canalDesc"></div>
+                    </div>
+                </div>
+                <div class="chat-canal-actions">
+                    <button class="btn-canal-accion" onclick="abrirPanelMiembros()" title="Ver miembros">
+                        <i class="fas fa-users"></i>
+                        <span id="canalMiembrosCount" class="miembros-count">0</span>
+                    </button>
+                    ${/* Solo admin puede eliminar canal */``}
+                    <button class="btn-canal-accion btn-danger-soft" id="btnEliminarCanal" onclick="eliminarCanalActual()" title="Eliminar canal" style="display:none">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mensajes -->
+            <div class="chat-mensajes-area" id="chatMensajesArea">
+                <div class="chat-mensajes-loading">
+                    <i class="fas fa-spinner fa-spin"></i> Cargando mensajes...
+                </div>
+            </div>
+
+            <!-- Input de mensaje -->
+            <div class="chat-input-area">
+                <!-- Preview de archivos adjuntos -->
+                <div id="chatArchivosPreview" class="archivos-preview chat-archivos-preview" style="display:none"></div>
+
+                <!-- Preview de referencia a ticket -->
+                <div id="chatTicketRef" class="chat-ticket-ref" style="display:none">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span id="chatTicketRefText"></span>
+                    <button onclick="quitarTicketRef()" title="Quitar referencia"><i class="fas fa-times"></i></button>
+                </div>
+
+                <div class="chat-input-row">
+                    <div class="chat-input-tools">
+                        <button class="btn-tool" onclick="triggerChatArchivo()" title="Adjuntar archivo">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <button class="btn-tool" onclick="abrirModalReferenciarTicket()" title="Referenciar ticket">
+                            <i class="fas fa-ticket-alt"></i>
+                        </button>
+                    </div>
+                    <textarea
+                        id="chatInputTexto"
+                        class="chat-input-textarea"
+                        placeholder="Escribe un mensaje... (Enter para enviar, Shift+Enter para nueva línea)"
+                        rows="1"
+                        onkeydown="handleChatKeydown(event)"
+                        oninput="autoResizeTextarea(this)"
+                    ></textarea>
+                    <button class="chat-send-btn" onclick="enviarMensajeChat()" id="chatSendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <input type="file" id="chatArchivoInput" multiple style="display:none" onchange="onChatArchivosSeleccionados()">
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- PANEL: Miembros del canal -->
+    <div id="panelMiembros" class="panel-miembros" style="display:none">
+        <div class="panel-miembros-header">
+            <span>Miembros del canal</span>
+            <button onclick="cerrarPanelMiembros()"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="panelMiembrosLista" class="panel-miembros-lista"></div>
+        <div class="panel-miembros-footer" id="panelMiembrosFooter" style="display:none">
+            <button class="btn-primary btn-sm" onclick="abrirModalAnadirMiembros()">
+                <i class="fas fa-plus"></i> Añadir miembros
+            </button>
+        </div>
+    </div>
+
+</main>
+
+<!-- ============================================================
+     MODALES
+     ============================================================ -->
+
+<!-- MODAL: Nuevo Canal -->
+<div class="modal" id="modalNuevoCanal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-hashtag"></i> Nuevo Canal</h2>
+            <button class="modal-close" onclick="cerrarModalNuevoCanal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Nombre del canal *</label>
+                <input type="text" id="canalNombreInput" placeholder="ej: soporte, proyectos, general...">
+            </div>
+            <div class="form-group">
+                <label>Descripción <span style="color:var(--gray);font-size:0.8rem">(opcional)</span></label>
+                <input type="text" id="canalDescInput" placeholder="¿Para qué se usará este canal?">
+            </div>
+            <div class="form-group">
+                <label>Añadir miembros</label>
+                <div id="nuevoCanal_miembros" class="operarios-checkboxes"></div>
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-primary" onclick="crearCanal()"><i class="fas fa-plus"></i> Crear canal</button>
+            <button class="btn-secondary" onclick="cerrarModalNuevoCanal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Nuevo Mensaje Directo -->
+<div class="modal" id="modalNuevoDirecto">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user"></i> Mensaje Directo</h2>
+            <button class="modal-close" onclick="cerrarModalNuevoDirecto()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <p style="color:var(--gray);font-size:0.85rem;margin-bottom:12px">Selecciona el compañero al que quieres escribir:</p>
+            <div id="nuevoDirecto_operarios" class="operarios-checkboxes"></div>
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-primary" onclick="crearMensajeDirecto()"><i class="fas fa-paper-plane"></i> Iniciar conversación</button>
+            <button class="btn-secondary" onclick="cerrarModalNuevoDirecto()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Añadir miembros al canal -->
+<div class="modal" id="modalAnadirMiembros">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user-plus"></i> Añadir miembros</h2>
+            <button class="modal-close" onclick="cerrarModalAnadirMiembros()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div id="anadirMiembros_lista" class="operarios-checkboxes"></div>
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-primary" onclick="guardarNuevosMiembros()"><i class="fas fa-save"></i> Añadir</button>
+            <button class="btn-secondary" onclick="cerrarModalAnadirMiembros()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Referenciar ticket en mensaje -->
+<div class="modal" id="modalReferenciarTicket">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-ticket-alt"></i> Referenciar ticket</h2>
+            <button class="modal-close" onclick="cerrarModalReferenciarTicket()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="search-box" style="margin-bottom:12px">
+                <i class="fas fa-search"></i>
+                <input type="text" id="buscarTicketRef" placeholder="Buscar ticket por número o asunto..." oninput="filtrarTicketsRef()">
+            </div>
+            <div id="ticketRefLista" class="ticket-ref-lista"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="./js/config.js"></script>
+<script src="./js/chat.js"></script>
+<script>
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        if (confirm('¿Cerrar sesión?')) {
+            sessionStorage.clear();
+            window.location.href = './index.html';
+        }
+    });
+</script>
+</body>
+</html>

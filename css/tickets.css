@@ -573,6 +573,389 @@
 }
 .operario-check-item.checked .operario-check-tick { background: var(--primary); border-color: var(--primary); }
 
+/* ============================================================
+   TICKETS V3 — Añadir al final de tickets.css
+   Estilos para: Tabs detalle + Comentarios
+   ============================================================ */
+
+/* ============================================================
+   TABS EN DETALLE TICKET
+   ============================================================ */
+.detalle-main-area {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.detalle-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border);
+    background: var(--white);
+    flex-shrink: 0;
+    padding: 0 20px;
+    gap: 0;
+}
+
+.detalle-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gray);
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+
+.detalle-tab:hover { color: var(--dark); }
+
+.detalle-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    background: var(--primary);
+    color: white;
+    border-radius: 9px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0 5px;
+}
+
+/* ============================================================
+   PANEL NOTAS (ajuste para tab)
+   ============================================================ */
+.tab-panel {
+    flex: 1;
+    overflow: hidden;
+    flex-direction: column;
+}
+
+.tab-panel.active {
+    display: flex;
+}
+
+#panelNotas {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.notas-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px 8px;
+    flex-shrink: 0;
+}
+
+.notas-textarea {
+    flex: 1;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+    font-size: 0.88rem;
+    color: var(--dark);
+    line-height: 1.6;
+    padding: 8px 20px 20px;
+    background: transparent;
+}
+.notas-textarea::placeholder { color: #94a3b8; }
+
+/* ============================================================
+   PANEL COMENTARIOS
+   ============================================================ */
+#panelComentarios {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Lista de comentarios */
+.comentarios-lista {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.comentarios-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 40px;
+    color: var(--gray);
+    font-size: 0.88rem;
+}
+
+.comentarios-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--gray);
+    padding: 40px;
+    text-align: center;
+}
+.comentarios-empty i    { font-size: 2.5rem; opacity: 0.25; display: block; margin-bottom: 8px; }
+.comentarios-empty p    { font-size: 0.95rem; font-weight: 600; color: var(--dark); }
+.comentarios-empty span { font-size: 0.82rem; }
+
+/* Ítem de comentario */
+.comentario-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    animation: fadeInComment 0.2s ease;
+}
+
+@keyframes fadeInComment {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.comentario-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.comentario-cuerpo {
+    flex: 1;
+    min-width: 0;
+}
+
+.comentario-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+}
+
+.comentario-autor {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--dark);
+}
+
+.comentario-fecha {
+    font-size: 0.75rem;
+    color: var(--gray);
+}
+
+.comentario-editado {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.comentario-acciones {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+.comentario-item:hover .comentario-acciones { opacity: 1; }
+
+.btn-comentario-accion {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--gray);
+    transition: all 0.15s;
+}
+.btn-comentario-delete:hover { color: #dc2626; background: #fee2e2; }
+
+.comentario-texto {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--dark);
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: var(--light);
+    border: 1px solid var(--border);
+    border-radius: 2px 10px 10px 10px;
+    padding: 8px 12px;
+}
+
+/* Archivos adjuntos al comentario */
+.comentario-archivos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.comentario-archivo-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    max-width: 200px;
+}
+.comentario-archivo-chip:hover { background: var(--primary-lt); border-color: var(--primary); }
+.comentario-archivo-chip span  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
+.comentario-archivo-chip small { color: var(--gray); flex-shrink: 0; }
+
+/* ============================================================
+   FORMULARIO NUEVO COMENTARIO
+   ============================================================ */
+.comentario-nuevo {
+    border-top: 1px solid var(--border);
+    background: var(--white);
+    padding: 12px 20px 16px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.comentario-nuevo-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.comentario-textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    color: var(--dark);
+    resize: vertical;
+    outline: none;
+    background: var(--light);
+    line-height: 1.5;
+    transition: border-color 0.2s;
+}
+.comentario-textarea:focus { border-color: var(--primary); background: var(--white); }
+.comentario-textarea::placeholder { color: #94a3b8; }
+
+.comentario-actions-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.comentario-attach-area {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-attach {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 9px;
+    cursor: pointer;
+    color: var(--gray);
+    font-size: 0.85rem;
+    transition: all 0.15s;
+}
+.btn-attach:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-lt); }
+
+/* Archivos preview en formulario */
+.archivos-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.archivo-preview-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--light);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    max-width: 200px;
+}
+.archivo-preview-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.archivo-preview-chip small { color: var(--gray); flex-shrink: 0; }
+.archivo-preview-chip button {
+    background: none; border: none; cursor: pointer;
+    color: var(--gray); padding: 1px 3px; border-radius: 3px; font-size: 0.7rem;
+}
+.archivo-preview-chip button:hover { color: #dc2626; background: #fee2e2; }
+
+/* Botón pequeño compartido */
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 0.82rem;
+}
+
+/* ============================================================
+   AVATAR SM (pequeño para formulario comentarios)
+   ============================================================ */
+.avatar-sm {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   RESPONSIVE — ajustes tabs en mobile
+   ============================================================ */
+@media (max-width: 768px) {
+    .detalle-tabs { padding: 0 12px; }
+    .detalle-tab  { padding: 10px 10px; font-size: 0.8rem; }
+    .comentarios-lista { padding: 12px; }
+    .comentario-nuevo  { padding: 10px 12px 14px; }
+
+    /* En mobile, ocultar texto del tab, solo icono */
+    .detalle-tab span { display: none; }
+}
+
+
+
 /* ============================================
    RESPONSIVE
    ============================================ */
