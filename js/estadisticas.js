@@ -207,7 +207,7 @@ function renderEmpresasStats(empresas) {
                     <span class="mini-badge" style="background:#fef3c7;color:#92400e" title="Pendientes">${e.pendientes}P</span>
                     <span class="mini-badge" style="background:#dbeafe;color:#1d4ed8" title="En curso">${e.en_curso}C</span>
                     <span class="mini-badge" style="background:#dcfce7;color:#15803d" title="Completados">${e.completados}✓</span>
-                    ${e.urgentes > 0 ? `<span class="mini-badge" style="background:#fee2e2;color:#b91c1c">🔴${e.urgentes}</span>` : ''}
+                    ${e.urgentes > 0 ? `<span class="mini-badge" style="background:#fee2e2;color:#b91c1c"><i class="fas fa-exclamation-circle"></i> ${e.urgentes}</span>` : ''}
                 </div>
                 <div class="empresa-stat-total">${e.total}</div>
             </div>`;

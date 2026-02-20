@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     setupNavigation();
     setupFormTabs();
     setupITTabs();
+    await initUserSession(); // ← esperar a que el rol esté cargado ANTES de loadAll
     await loadAll();
 });
 
@@ -1637,7 +1638,8 @@ function openUserModal() {
     document.getElementById('userRol').value    = 'trabajador';
     document.getElementById('userEmailGroup').style.display  = '';
     document.getElementById('userActivoGroup').style.display = 'none';
-    document.getElementById('userPasswordInfo').style.display = 'none';
+    document.getElementById('userPasswordGroup').style.display = '';
+    document.getElementById('userPassword').value = '';
     document.getElementById('userModal').style.display = 'flex';
 }
 
@@ -1652,7 +1654,8 @@ function editUser(id) {
     document.getElementById('userActivo').value              = String(u.activo);
     document.getElementById('userEmailGroup').style.display  = 'none'; // no se puede cambiar el email
     document.getElementById('userActivoGroup').style.display = '';
-    document.getElementById('userPasswordInfo').style.display = 'none';
+    document.getElementById('userPasswordGroup').style.display = 'none';
+    document.getElementById('userPassword').value = '';
     document.getElementById('userModal').style.display = 'flex';
 }
 
@@ -1661,44 +1664,39 @@ function closeUserModal() {
 }
 
 async function saveUser() {
-    const id     = document.getElementById('editUserId').value;
-    const nombre = document.getElementById('userNombre').value.trim();
-    const email  = document.getElementById('userEmail').value.trim();
-    const rol    = document.getElementById('userRol').value;
-    const activo = document.getElementById('userActivo').value === 'true';
+    const id       = document.getElementById('editUserId').value;
+    const nombre   = document.getElementById('userNombre').value.trim();
+    const email    = document.getElementById('userEmail').value.trim();
+    const rol      = document.getElementById('userRol').value;
+    const activo   = document.getElementById('userActivo').value === 'true';
+    const password = document.getElementById('userPassword').value;
 
     if (!nombre || (!id && !email)) {
         showToast('error', 'Error', 'Nombre y email son obligatorios');
         return;
     }
 
+    if (!id && !password) {
+        showToast('error', 'Error', 'La contraseña es obligatoria');
+        return;
+    }
+
     showLoading(true);
     try {
         if (id) {
-            // Editar
             await apiFetch(`/api/usuarios/${id}`, {
                 method: 'PUT',
                 body: JSON.stringify({ nombre, rol, activo })
             });
             showToast('success', 'Actualizado', 'Usuario actualizado correctamente');
-            closeUserModal();
         } else {
-            // Crear — el backend devuelve _tempPassword
-            const res = await apiFetch('/api/usuarios', {
+            await apiFetch('/api/usuarios', {
                 method: 'POST',
-                body: JSON.stringify({ nombre, email, rol })
+                body: JSON.stringify({ nombre, email, rol, password })
             });
-
-            // Mostrar contraseña generada en el modal antes de cerrar
-            document.getElementById('userPasswordText').textContent = res._tempPassword || '(ver email)';
-            document.getElementById('userPasswordInfo').style.display = '';
-            document.getElementById('userEmailGroup').style.display  = 'none';
-            document.getElementById('userNombre').disabled = true;
-            document.getElementById('userRol').disabled    = true;
-
-            // Cambiar botón de guardar a cerrar
-            showToast('success', 'Creado', `Usuario creado. Contraseña enviada a ${email}`);
+            showToast('success', 'Creado', `Usuario creado correctamente`);
         }
+        closeUserModal();
         await loadUsuarios();
     } catch (e) {
         showToast('error', 'Error', e.message);

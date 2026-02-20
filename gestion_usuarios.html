@@ -406,14 +406,9 @@
                     <option value="false">Desactivado</option>
                 </select>
             </div>
-            <div id="userPasswordInfo" style="display:none;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:14px 16px;margin-top:8px">
-                <p style="font-size:0.85rem;color:#166534;font-weight:600;margin-bottom:6px">
-                    <i class="fas fa-key"></i> Contraseña generada:
-                </p>
-                <code id="userPasswordText" style="font-size:1rem;color:#15803d;background:#dcfce7;padding:4px 10px;border-radius:6px;display:block;text-align:center;letter-spacing:2px"></code>
-                <p style="font-size:0.78rem;color:#16a34a;margin-top:8px">
-                    <i class="fas fa-envelope"></i> Se enviará por email al usuario automáticamente.
-                </p>
+            <div class="form-group" id="userPasswordGroup">
+                <label>Contraseña *</label>
+                <input type="password" id="userPassword" placeholder="Contraseña del nuevo usuario" required>
             </div>
         </div>
         <div class="modal-buttons">
@@ -761,7 +756,6 @@
         window.location.replace('./index.html');
         return;
     }
-    // Carga perfil, aplica restricciones de rol
     await initUserSession();
 })();
 
@@ -772,27 +766,37 @@ document.getElementById('logoutBtn').addEventListener('click', function() {
     }
 });
 </script>
-<script>
-(function() {
-    if (!sessionStorage.getItem('hola_token')) {
-        window.location.replace('./index.html');
-    }
-    const usuario = sessionStorage.getItem('hola_usuario');
-    if (usuario) {
-        const el = document.getElementById('usuarioNombre');
-        if (el) el.textContent = usuario;
-    }
-})();
-
-document.getElementById('logoutBtn').addEventListener('click', function() {
-    if (confirm('¿Cerrar sesión?')) {
-        sessionStorage.removeItem('hola_token');
-        sessionStorage.removeItem('hola_usuario');
-        window.location.href = './index.html';
-    }
-});
-</script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="./js/gestion_usuarios.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const hash = window.location.hash;
+
+    if (hash) {
+        const targetSection = document.querySelector(hash);
+
+        if (targetSection) {
+
+            // Quitar active de todas
+            document.querySelectorAll('.content-section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+
+            // Activar la sección correcta
+            targetSection.classList.add('active');
+
+            // También actualizar menú superior
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === hash) {
+                    link.classList.add('active');
+                }
+            });
+        }
+    }
+
+});
+</script>
 </body>
 </html>

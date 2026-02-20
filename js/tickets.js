@@ -101,9 +101,11 @@ async function cargarDispositivosEmpresa() {
     if (!empresaId) return;
     try {
         const dispositivos = await apiFetch(`/api/dispositivos?empresa_id=${empresaId}`);
-        dispositivos.forEach(d => {
-            sel.innerHTML += `<option value="${d.id}">[${d.tipo || d.categoria}] ${escHtml(d.nombre)}</option>`;
-        });
+        dispositivos
+            .filter(d => d.categoria !== 'correo') // ← excluir correos
+            .forEach(d => {
+                sel.innerHTML += `<option value="${d.id}">[${d.tipo || d.categoria}] ${escHtml(d.nombre)}</option>`;
+            });
     } catch (err) {
         console.error('Error dispositivos:', err);
     }
@@ -260,7 +262,7 @@ function renderCardsTickets(tickets) {
             <div class="ticket-card-meta">
                 <span><i class="fas fa-building"></i> ${escHtml(t.empresas?.nombre || '—')}</span>
                 ${nombresOps ? `<span><i class="fas fa-user"></i> ${escHtml(nombresOps)}</span>` : ''}
-                <span><i class="fas fa-clock"></i> ${tiempoStr}${estadoCerrado ? ' 🔒' : ''}</span>
+                <span><i class="fas fa-clock"></i> ${tiempoStr}${estadoCerrado ? ' <i class="fas fa-lock" style="font-size:0.7rem;opacity:0.5"></i>' : ''}</span>
                 <span class="prioridad-badge prioridad-${t.prioridad}" style="margin-left:auto">${t.prioridad}</span>
             </div>
         </div>`;
@@ -952,25 +954,35 @@ function formatBytes(bytes) {
 }
 
 function prioridadIcon(p) {
-    const icons = { Baja: '🟢', Media: '🔵', Alta: '🟡', Urgente: '🔴' };
+    const icons = {
+        Baja:    '<i class="fas fa-circle" style="color:#22c55e;font-size:0.7rem"></i>',
+        Media:   '<i class="fas fa-circle" style="color:#3b82f6;font-size:0.7rem"></i>',
+        Alta:    '<i class="fas fa-circle" style="color:#f59e0b;font-size:0.7rem"></i>',
+        Urgente: '<i class="fas fa-circle" style="color:#ef4444;font-size:0.7rem"></i>',
+    };
     return icons[p] || '';
 }
 
 function estadoIcon(e) {
-    const icons = { Pendiente: '⏳', 'En curso': '🔵', Completado: '✅', Facturado: '💜' };
+    const icons = {
+        Pendiente:  '<i class="fas fa-clock" style="color:#d97706;font-size:0.75rem"></i>',
+        'En curso': '<i class="fas fa-spinner" style="color:#3b82f6;font-size:0.75rem"></i>',
+        Completado: '<i class="fas fa-check-circle" style="color:#22c55e;font-size:0.75rem"></i>',
+        Facturado:  '<i class="fas fa-file-invoice-dollar" style="color:#9333ea;font-size:0.75rem"></i>',
+    };
     return icons[e] || '';
 }
 
 function iconoArchivo(mime) {
-    if (!mime) return '📎';
-    if (mime.startsWith('image/')) return '🖼️';
-    if (mime === 'application/pdf') return '📄';
-    if (mime.includes('word')) return '📝';
-    if (mime.includes('excel') || mime.includes('spreadsheet')) return '📊';
-    if (mime.includes('zip') || mime.includes('compressed')) return '🗜️';
-    if (mime.startsWith('video/')) return '🎥';
-    if (mime.startsWith('audio/')) return '🎵';
-    return '📎';
+    if (!mime) return '<i class="fas fa-paperclip"></i>';
+    if (mime.startsWith('image/'))                          return '<i class="fas fa-image" style="color:#3b82f6"></i>';
+    if (mime === 'application/pdf')                         return '<i class="fas fa-file-pdf" style="color:#ef4444"></i>';
+    if (mime.includes('word'))                              return '<i class="fas fa-file-word" style="color:#2563eb"></i>';
+    if (mime.includes('excel') || mime.includes('sheet'))   return '<i class="fas fa-file-excel" style="color:#16a34a"></i>';
+    if (mime.includes('zip') || mime.includes('compressed'))return '<i class="fas fa-file-archive" style="color:#d97706"></i>';
+    if (mime.startsWith('video/'))                          return '<i class="fas fa-file-video" style="color:#9333ea"></i>';
+    if (mime.startsWith('audio/'))                          return '<i class="fas fa-file-audio" style="color:#0891b2"></i>';
+    return '<i class="fas fa-file" style="color:#64748b"></i>';
 }
 
 function historialTipoIcon(tipo) {

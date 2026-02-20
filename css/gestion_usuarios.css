@@ -569,6 +569,30 @@ tr { transition: background 0.2s ease; }
     justify-content: center;
 }
 
+/* Ocultar solo en NAV por defecto */
+.top-nav [data-admin-only],
+.bottom-nav [data-admin-only] {
+    display: none !important;
+}
+
+/* Mostrar en nav cuando es admin */
+body.is-admin .top-nav [data-admin-only] {
+    display: flex !important;
+}
+
+body.is-admin .bottom-nav [data-admin-only] {
+    display: flex !important;
+}
+
+/* La sección usuarios: oculta por defecto, visible solo para admin */
+section[data-admin-only] {
+    display: none !important;
+}
+
+body.is-admin section[data-admin-only] {
+    display: block !important;
+}
+
 /* Generic card para contratos, facturas, tickets */
 .data-card {
     background: white;

@@ -104,11 +104,12 @@ async function initUserSession() {
 
 function applyRoleRestrictions(rol) {
     const isAdminUser = rol === 'admin';
-
-    // Elementos con data-admin-only → ocultar si no es admin
-    document.querySelectorAll('[data-admin-only]').forEach(el => {
-        el.style.display = isAdminUser ? '' : 'none';
-    });
+    
+    if (isAdminUser) {
+        document.body.classList.add('is-admin');
+    } else {
+        document.body.classList.remove('is-admin');
+    }
 }
 
 function isAdmin() {
