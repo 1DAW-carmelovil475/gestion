@@ -4,17 +4,14 @@
 
 'use strict';
 
-// Estado global
 let todosLosTickets = [];
 let operarios = [];
 let empresas = [];
 let ticketActual = null;
 let currentUserId = null;
-let tipoMensajeActual = 'mensaje';
-let archivosChatPendientes = [];
-let historialAbierto = false;
+let chatInternoAbierto = false;
+let notasGuardadoTimer = null;
 
-// Colores para avatares
 const AVATAR_COLORS = ['#0066ff','#16a34a','#d97706','#dc2626','#9333ea','#0891b2','#be185d','#065f46'];
 
 function getAvatarColor(str) {
@@ -41,16 +38,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!me) return;
     currentUserId = me.id;
 
-    // Cargar datos iniciales en paralelo
-    await Promise.all([
-        cargarEmpresas(),
-        cargarOperarios(),
-    ]);
-
+    await Promise.all([cargarEmpresas(), cargarOperarios()]);
     await cargarTickets();
     await cargarStats();
 
-    // Búsqueda con debounce
     const searchInput = document.getElementById('searchTicket');
     let searchTimer;
     searchInput.addEventListener('input', () => {
@@ -58,7 +49,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         searchTimer = setTimeout(cargarTickets, 400);
     });
 
-    // Valor de hoy en filtro hasta por defecto (no preseleccionado, solo disponible)
     document.getElementById('horasFecha').valueAsDate = new Date();
 });
 
@@ -68,82 +58,62 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function cargarEmpresas() {
     try {
         empresas = await apiFetch('/api/empresas');
-        // Poblar select empresa en modal
         const selEmpresa = document.getElementById('ticketEmpresa');
-        const selFiltro = document.getElementById('filtroEmpresa');
-
+        const selFiltro  = document.getElementById('filtroEmpresa');
         empresas.forEach(e => {
             selEmpresa.innerHTML += `<option value="${e.id}">${e.nombre}</option>`;
-            selFiltro.innerHTML += `<option value="${e.id}">${e.nombre}</option>`;
+            selFiltro.innerHTML  += `<option value="${e.id}">${e.nombre}</option>`;
         });
-    } catch (err) {
-        console.error('Error cargando empresas:', err);
-    }
+    } catch (err) { console.error('Error empresas:', err); }
 }
 
 async function cargarOperarios() {
     try {
         operarios = await apiFetch('/api/v2/operarios');
         const selFiltro = document.getElementById('filtroOperario');
-
         operarios.forEach(op => {
             selFiltro.innerHTML += `<option value="${op.id}">${op.nombre}</option>`;
         });
-
         renderOperariosCheckboxes('operariosCheckboxes', []);
-    } catch (err) {
-        console.error('Error cargando operarios:', err);
-    }
+    } catch (err) { console.error('Error operarios:', err); }
 }
 
 async function cargarDispositivosEmpresa() {
     const empresaId = document.getElementById('ticketEmpresa').value;
     const sel = document.getElementById('ticketDispositivo');
     sel.innerHTML = '<option value="">Sin dispositivo</option>';
-
     if (!empresaId) return;
     try {
         const dispositivos = await apiFetch(`/api/dispositivos?empresa_id=${empresaId}`);
         dispositivos.forEach(d => {
             sel.innerHTML += `<option value="${d.id}">[${d.tipo || d.categoria}] ${d.nombre}</option>`;
         });
-    } catch (err) {
-        console.error('Error cargando dispositivos:', err);
-    }
+    } catch (err) { console.error('Error dispositivos:', err); }
 }
 
 async function cargarTickets() {
     const params = new URLSearchParams();
-    const estado = document.getElementById('filtroEstado').value;
+    const estado    = document.getElementById('filtroEstado').value;
     const prioridad = document.getElementById('filtroPrioridad').value;
-    const operario = document.getElementById('filtroOperario').value;
-    const empresa = document.getElementById('filtroEmpresa').value;
-    const orden = document.getElementById('filtroOrden').value;
-    const search = document.getElementById('searchTicket').value;
-    const desde = document.getElementById('filtroDesde').value;
-    const hasta = document.getElementById('filtroHasta').value;
+    const operario  = document.getElementById('filtroOperario').value;
+    const empresa   = document.getElementById('filtroEmpresa').value;
+    const search    = document.getElementById('searchTicket').value;
+    const desde     = document.getElementById('filtroDesde').value;
+    const hasta     = document.getElementById('filtroHasta').value;
 
-    // "abiertos" es un valor especial que filtramos en frontend
     if (estado !== 'all' && estado !== 'abiertos') params.set('estado', estado);
     if (prioridad !== 'all') params.set('prioridad', prioridad);
     if (operario !== 'all') params.set('operario_id', operario);
     if (empresa !== 'all') params.set('empresa_id', empresa);
-    if (orden) params.set('orden', orden);
     if (search) params.set('search', search);
     if (desde) params.set('desde', desde);
     if (hasta) params.set('hasta', hasta);
 
     try {
         let tickets = await apiFetch(`/api/v2/tickets?${params}`);
-
-        // Filtro "abiertos" en frontend
-        if (estado === 'abiertos') {
-            tickets = tickets.filter(t => t.estado === 'Pendiente' || t.estado === 'En curso');
-        }
-
+        if (estado === 'abiertos') tickets = tickets.filter(t => t.estado === 'Pendiente' || t.estado === 'En curso');
         todosLosTickets = tickets;
         document.getElementById('totalFiltrado').textContent = `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`;
-
         renderTablaTickets(tickets);
         renderCardsTickets(tickets);
     } catch (err) {
@@ -153,16 +123,39 @@ async function cargarTickets() {
 }
 
 async function cargarStats() {
+    // Solo admin puede ver estadísticas completas; para el panel de tickets
+    // todos pueden ver el resumen básico de sus propios tickets
     try {
-        const data = await apiFetch('/api/v2/estadisticas/resumen');
-        document.getElementById('statTotal').textContent = data.total;
-        document.getElementById('statPendientes').textContent = data.pendientes;
-        document.getElementById('statEnCurso').textContent = data.en_curso;
-        document.getElementById('statCompletados').textContent = data.completados;
-        document.getElementById('statFacturados').textContent = data.facturados;
-        document.getElementById('statUrgentes').textContent = data.urgentes;
+        const data = isAdmin()
+            ? await apiFetch('/api/v2/estadisticas/resumen')
+            : null;
+
+        if (data) {
+            document.getElementById('statTotal').textContent       = data.total;
+            document.getElementById('statPendientes').textContent  = data.pendientes;
+            document.getElementById('statEnCurso').textContent     = data.en_curso;
+            document.getElementById('statCompletados').textContent = data.completados;
+            document.getElementById('statFacturados').textContent  = data.facturados;
+            document.getElementById('statUrgentes').textContent    = data.urgentes;
+        } else {
+            // Para trabajadores: contar desde los tickets que ya tenemos
+            const all = todosLosTickets;
+            document.getElementById('statTotal').textContent       = all.length;
+            document.getElementById('statPendientes').textContent  = all.filter(t => t.estado === 'Pendiente').length;
+            document.getElementById('statEnCurso').textContent     = all.filter(t => t.estado === 'En curso').length;
+            document.getElementById('statCompletados').textContent = all.filter(t => t.estado === 'Completado').length;
+            document.getElementById('statFacturados').textContent  = all.filter(t => t.estado === 'Facturado').length;
+            document.getElementById('statUrgentes').textContent    = all.filter(t => t.prioridad === 'Urgente').length;
+        }
     } catch (err) {
-        console.error('Error cargando stats:', err);
+        // Si falla (no admin), contar desde los tickets locales
+        const all = todosLosTickets;
+        document.getElementById('statTotal').textContent       = all.length;
+        document.getElementById('statPendientes').textContent  = all.filter(t => t.estado === 'Pendiente').length;
+        document.getElementById('statEnCurso').textContent     = all.filter(t => t.estado === 'En curso').length;
+        document.getElementById('statCompletados').textContent = all.filter(t => t.estado === 'Completado').length;
+        document.getElementById('statFacturados').textContent  = all.filter(t => t.estado === 'Facturado').length;
+        document.getElementById('statUrgentes').textContent    = all.filter(t => t.prioridad === 'Urgente').length;
     }
 }
 
@@ -171,7 +164,6 @@ async function cargarStats() {
 // ============================================
 function renderTablaTickets(tickets) {
     const tbody = document.getElementById('ticketsTableBody');
-
     if (!tickets.length) {
         tbody.innerHTML = `<tr><td colspan="9" class="empty-state">
             <i class="fas fa-inbox" style="display:block;font-size:2rem;color:#cbd5e1;margin-bottom:12px"></i>
@@ -182,15 +174,19 @@ function renderTablaTickets(tickets) {
 
     tbody.innerHTML = tickets.map(t => {
         const asignados = t.ticket_asignaciones || [];
-        const avatares = asignados.map((a, i) => {
+        const avatares = asignados.map(a => {
             const nombre = a.profiles?.nombre || '?';
             const color = getAvatarColor(a.user_id);
             return `<div class="avatar-operario" style="background:${color}" title="${nombre}">${getInitials(nombre)}</div>`;
         }).join('');
 
+        // Tiempo transcurrido automático
+        const horasAuto = t.horas_transcurridas || 0;
+        const tiempoStr = formatHorasTranscurridas(horasAuto);
+
         return `<tr onclick="abrirTicket('${t.id}')" style="cursor:pointer">
             <td><span class="ticket-numero">#${t.numero}</span></td>
-            <td>${t.empresas?.nombre || '—'}</td>
+            <td>${escHtml(t.empresas?.nombre || '—')}</td>
             <td>
                 <div class="ticket-asunto-cell">
                     <span class="ticket-asunto-text">${escHtml(t.asunto)}</span>
@@ -202,7 +198,7 @@ function renderTablaTickets(tickets) {
             </td>
             <td><span class="prioridad-badge prioridad-${t.prioridad}">${prioridadIcon(t.prioridad)} ${t.prioridad}</span></td>
             <td><span class="estado-badge estado-${escHtml(t.estado)}">${estadoIcon(t.estado)} ${t.estado}</span></td>
-            <td style="font-weight:600;color:var(--primary)">${t.horas_totales > 0 ? t.horas_totales.toFixed(1) + 'h' : '—'}</td>
+            <td style="font-weight:600;color:var(--primary);font-size:0.82rem">${tiempoStr}</td>
             <td style="color:var(--gray);font-size:0.82rem">${formatFecha(t.created_at)}</td>
             <td onclick="event.stopPropagation()">
                 <button class="btn-action btn-edit" onclick="abrirModalEditarTicketDesdeLista('${t.id}')" title="Editar">
@@ -221,15 +217,14 @@ function renderTablaTickets(tickets) {
 // ============================================
 function renderCardsTickets(tickets) {
     const container = document.getElementById('ticketsCardsList');
-
     if (!tickets.length) {
         container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><br>Sin tickets</div>`;
         return;
     }
-
     container.innerHTML = tickets.map(t => {
         const asignados = t.ticket_asignaciones || [];
         const nombresOps = asignados.map(a => a.profiles?.nombre).filter(Boolean).join(', ');
+        const tiempoStr = formatHorasTranscurridas(t.horas_transcurridas || 0);
         return `<div class="ticket-card-mobile prio-${t.prioridad}" onclick="abrirTicket('${t.id}')">
             <div class="ticket-card-top">
                 <div>
@@ -239,8 +234,9 @@ function renderCardsTickets(tickets) {
                 <span class="estado-badge estado-${escHtml(t.estado)}">${t.estado}</span>
             </div>
             <div class="ticket-card-meta">
-                <span><i class="fas fa-building"></i> ${t.empresas?.nombre || '—'}</span>
+                <span><i class="fas fa-building"></i> ${escHtml(t.empresas?.nombre || '—')}</span>
                 ${nombresOps ? `<span><i class="fas fa-user"></i> ${escHtml(nombresOps)}</span>` : ''}
+                <span><i class="fas fa-clock"></i> ${tiempoStr}</span>
                 <span class="prioridad-badge prioridad-${t.prioridad}" style="margin-left:auto">${t.prioridad}</span>
             </div>
         </div>`;
@@ -253,16 +249,14 @@ function renderCardsTickets(tickets) {
 async function abrirTicket(id) {
     document.getElementById('vistaLista').style.display = 'none';
     document.getElementById('vistaDetalle').style.display = 'flex';
+    chatInternoAbierto = false;
 
-    // Limpiar estado previo
-    document.getElementById('chatMessages').innerHTML = '<div class="chat-loading"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
     document.getElementById('detalleInfoRows').innerHTML = '';
     document.getElementById('detalleOperarios').innerHTML = '<div style="color:var(--gray);font-size:0.82rem;padding:8px 14px">Cargando...</div>';
 
     try {
         ticketActual = await apiFetch(`/api/v2/tickets/${id}`);
         renderDetalleTicket(ticketActual);
-        renderChat(ticketActual.ticket_mensajes || []);
     } catch (err) {
         showToast('Error', 'No se pudo cargar el ticket', 'error');
         volverALista();
@@ -273,52 +267,45 @@ function volverALista() {
     document.getElementById('vistaDetalle').style.display = 'none';
     document.getElementById('vistaLista').style.display = 'block';
     ticketActual = null;
-    archivosChatPendientes = [];
+    cerrarChatInterno();
     cargarTickets();
     cargarStats();
 }
 
 function renderDetalleTicket(ticket) {
-    // Número y asunto
     document.getElementById('detalleNumero').textContent = `#${ticket.numero}`;
     document.getElementById('detalleAsunto').textContent = ticket.asunto;
-
-    // Estado select
-    const estadoSel = document.getElementById('detalleEstadoSelect');
-    estadoSel.value = ticket.estado;
-
-    // Botón eliminar solo admin
+    document.getElementById('detalleEstadoSelect').value = ticket.estado;
     document.getElementById('btnEliminarTicket').style.display = isAdmin() ? '' : 'none';
 
-    // Info rows
-    const infoRows = document.getElementById('detalleInfoRows');
     const empresa = ticket.empresas;
     const dispositivo = ticket.dispositivos;
 
-    infoRows.innerHTML = `
-        ${infoRow('Empresa', empresa?.nombre || '—')}
+    // Tiempo transcurrido automático
+    const tiempoStr = formatHorasTranscurridas(ticket.horas_transcurridas || 0);
+
+    document.getElementById('detalleInfoRows').innerHTML = `
+        ${infoRow('Empresa', escHtml(empresa?.nombre || '—'))}
         ${infoRow('Prioridad', `<span class="prioridad-badge prioridad-${ticket.prioridad}">${prioridadIcon(ticket.prioridad)} ${ticket.prioridad}</span>`)}
         ${infoRow('Estado', `<span class="estado-badge estado-${escHtml(ticket.estado)}">${estadoIcon(ticket.estado)} ${ticket.estado}</span>`)}
         ${dispositivo ? infoRow('Equipo', `<i class="fas fa-desktop" style="color:var(--primary)"></i> ${escHtml(dispositivo.nombre)}`) : ''}
+        ${infoRow('⏱ Tiempo abierto', `<strong style="color:var(--primary)">${tiempoStr}</strong>`)}
         ${ticket.descripcion ? infoRow('Descripción', `<span style="white-space:pre-wrap">${escHtml(ticket.descripcion)}</span>`) : ''}
         ${infoRow('Creado', formatFechaLarga(ticket.created_at))}
-        ${ticket.started_at ? infoRow('Iniciado', formatFechaLarga(ticket.started_at)) : ''}
-        ${ticket.completed_at ? infoRow('Completado', formatFechaLarga(ticket.completed_at)) : ''}
-        ${ticket.invoiced_at ? infoRow('Facturado', formatFechaLarga(ticket.invoiced_at)) : ''}
+        ${ticket.started_at   ? infoRow('Iniciado',    formatFechaLarga(ticket.started_at))   : ''}
+        ${ticket.completed_at ? infoRow('Completado',  formatFechaLarga(ticket.completed_at)) : ''}
+        ${ticket.invoiced_at  ? infoRow('Facturado',   formatFechaLarga(ticket.invoiced_at))  : ''}
     `;
 
-    // Operarios
     renderOperariosDetalle(ticket.ticket_asignaciones || []);
-
-    // Horas
-    renderHorasDetalle(ticket.ticket_horas || []);
-
-    // Archivos (los que no pertenecen a un mensaje)
-    const archivosSueltos = (ticket.ticket_archivos || []).filter(a => !a.mensaje_id);
-    renderArchivosDetalle(archivosSueltos);
-
-    // Historial
+    renderArchivosDetalle(ticket.ticket_archivos || []);
     renderHistorialDetalle(ticket.ticket_historial || []);
+
+    // Notas (bloc de notas)
+    const notasArea = document.getElementById('detalleNotas');
+    if (notasArea) {
+        notasArea.value = ticket.notas || '';
+    }
 }
 
 function infoRow(label, value) {
@@ -349,34 +336,6 @@ function renderOperariosDetalle(asignaciones) {
     }).join('');
 }
 
-function renderHorasDetalle(horas) {
-    const container = document.getElementById('detalleHoras');
-    const totalEl = document.getElementById('detalleHorasTotal');
-
-    if (!horas.length) {
-        container.innerHTML = '<div style="color:var(--gray);font-size:0.82rem;padding:8px 14px">Sin horas registradas</div>';
-        totalEl.textContent = '';
-        return;
-    }
-
-    const total = horas.reduce((sum, h) => sum + Number(h.horas), 0);
-    totalEl.textContent = `Total: ${total.toFixed(2)}h`;
-
-    container.innerHTML = horas.map(h => `
-        <div class="hora-item">
-            <div class="hora-item-info">
-                <span class="hora-item-quien">${escHtml(h.profiles?.nombre || 'Desconocido')}</span>
-                <span class="hora-item-desc">${escHtml(h.descripcion || h.fecha || '')}</span>
-            </div>
-            <span class="hora-item-cantidad">${Number(h.horas).toFixed(1)}h</span>
-            ${isAdmin() || h.user_id === currentUserId ? `
-                <button class="btn-delete-hora" onclick="eliminarHora('${h.id}')" title="Eliminar">
-                    <i class="fas fa-times"></i>
-                </button>` : ''}
-        </div>
-    `).join('');
-}
-
 function renderArchivosDetalle(archivos) {
     const container = document.getElementById('detalleArchivos');
     if (!archivos.length) {
@@ -390,16 +349,17 @@ function renderArchivosDetalle(archivos) {
                 <div class="archivo-nombre">${escHtml(a.nombre_original)}</div>
                 <div class="archivo-meta">${formatBytes(a.tamanio)} · ${formatFecha(a.created_at)}</div>
             </div>
-            ${isAdmin() ? `<button class="btn-delete-archivo" onclick="event.stopPropagation();eliminarArchivo('${a.id}')" title="Eliminar">
-                <i class="fas fa-times"></i>
-            </button>` : ''}
+            ${isAdmin() || a.subido_by === currentUserId ? `
+                <button class="btn-delete-archivo" onclick="event.stopPropagation();eliminarArchivo('${a.id}')" title="Eliminar">
+                    <i class="fas fa-times"></i>
+                </button>` : ''}
         </div>
     `).join('');
 }
 
 function renderHistorialDetalle(historial) {
     const container = document.getElementById('detalleHistorial');
-    const sortedH = [...historial].reverse(); // más reciente primero
+    const sortedH = [...historial].reverse();
     container.innerHTML = sortedH.map(h => {
         const icon = historialTipoIcon(h.tipo);
         return `<div class="historial-item">
@@ -413,156 +373,138 @@ function renderHistorialDetalle(historial) {
 }
 
 function toggleHistorial() {
-    historialAbierto = !historialAbierto;
-    document.getElementById('detalleHistorial').style.display = historialAbierto ? 'flex' : 'none';
-    document.getElementById('historialChevron').className = historialAbierto
-        ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+    const el = document.getElementById('detalleHistorial');
+    const chevron = document.getElementById('historialChevron');
+    const visible = el.style.display !== 'none';
+    el.style.display = visible ? 'none' : 'flex';
+    chevron.className = visible ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
 }
 
 // ============================================
-// CHAT
+// NOTAS — BLOC DE NOTAS (autoguardado)
 // ============================================
-function setTipoMensaje(tipo) {
-    tipoMensajeActual = tipo;
-    document.querySelectorAll('.chat-tipo-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tipo === tipo);
-    });
-    const input = document.getElementById('chatInput');
-    if (tipo === 'nota_interna') {
-        input.classList.add('nota-interna');
-        input.placeholder = 'Escribe una nota interna (no visible para el cliente)...';
+function onNotasChange() {
+    clearTimeout(notasGuardadoTimer);
+    const indicator = document.getElementById('notasIndicador');
+    if (indicator) indicator.textContent = 'Guardando...';
+
+    notasGuardadoTimer = setTimeout(async () => {
+        if (!ticketActual) return;
+        const notas = document.getElementById('detalleNotas').value;
+        try {
+            await apiFetch(`/api/v2/tickets/${ticketActual.id}/notas`, {
+                method: 'PUT',
+                body: JSON.stringify({ notas })
+            });
+            ticketActual.notas = notas;
+            if (indicator) {
+                indicator.textContent = 'Guardado ✓';
+                setTimeout(() => { if (indicator) indicator.textContent = ''; }, 2000);
+            }
+        } catch (err) {
+            if (indicator) indicator.textContent = 'Error al guardar';
+        }
+    }, 1000);
+}
+
+// ============================================
+// CHAT INTERNO — PANEL LATERAL DERECHO DESPLEGABLE
+// ============================================
+function toggleChatInterno() {
+    chatInternoAbierto = !chatInternoAbierto;
+    const panel = document.getElementById('chatInternoPanel');
+    const btn = document.getElementById('btnChatInterno');
+
+    if (chatInternoAbierto) {
+        panel.style.display = 'flex';
+        btn.classList.add('active');
+        if (ticketActual) {
+            const input = document.getElementById('chatInternoInput');
+            if (input) input.focus();
+        }
     } else {
-        input.classList.remove('nota-interna');
-        input.placeholder = 'Escribe un mensaje...';
+        panel.style.display = 'none';
+        btn.classList.remove('active');
     }
 }
 
-function renderChat(mensajes) {
-    const container = document.getElementById('chatMessages');
+function cerrarChatInterno() {
+    chatInternoAbierto = false;
+    const panel = document.getElementById('chatInternoPanel');
+    const btn = document.getElementById('btnChatInterno');
+    if (panel) panel.style.display = 'none';
+    if (btn) btn.classList.remove('active');
+}
+
+// Cargar mensajes internos (notas historial del tipo nota_interna)
+function cargarMensajesInternos() {
+    if (!ticketActual) return;
+    const historial = ticketActual.ticket_historial || [];
+    const notas = historial.filter(h => h.tipo === 'nota_interna');
+    renderMensajesInternos(notas);
+}
+
+function renderMensajesInternos(mensajes) {
+    const container = document.getElementById('chatInternoMensajes');
     if (!mensajes.length) {
-        container.innerHTML = `<div class="chat-empty">
-            <i class="fas fa-comments"></i>
-            Aún no hay mensajes. ¡Inicia la conversación!
+        container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--gray);font-size:0.88rem">
+            <i class="fas fa-lock" style="display:block;font-size:1.8rem;opacity:0.3;margin-bottom:8px"></i>
+            Sin notas internas
         </div>`;
         return;
     }
-
     container.innerHTML = mensajes.map(m => {
         const esPropio = m.user_id === currentUserId;
-        const esNota = m.tipo === 'nota_interna';
         const nombre = m.profiles?.nombre || 'Desconocido';
-        const color = getAvatarColor(m.user_id);
-        const archivos = m.ticket_archivos || [];
-
-        return `<div class="chat-message ${esPropio ? 'own' : ''} ${esNota ? 'nota' : ''}">
-            ${!esNota ? `<div class="msg-avatar" style="background:${color}">${getInitials(nombre)}</div>` : ''}
-            <div class="msg-bubble">
-                ${esNota ? `<div class="msg-nota-label"><i class="fas fa-lock"></i> Nota interna</div>` : ''}
-                <div class="msg-header">
-                    <span class="msg-autor">${escHtml(nombre)}</span>
-                    <span class="msg-fecha">${formatFechaLarga(m.created_at)}</span>
-                </div>
-                ${m.mensaje ? `<div class="msg-texto">${escHtml(m.mensaje)}</div>` : ''}
-                ${archivos.length ? `<div class="msg-archivos">
-                    ${archivos.map(a => `
-                        <span class="msg-archivo-link" onclick="descargarArchivo('${a.id}', '${escHtml(a.nombre_original)}')">
-                            ${iconoArchivo(a.mime_type)} ${escHtml(a.nombre_original)} <span style="font-size:0.7rem;color:var(--gray)">${formatBytes(a.tamanio)}</span>
-                        </span>
-                    `).join('')}
-                </div>` : ''}
+        const color = m.user_id ? getAvatarColor(m.user_id) : '#9333ea';
+        return `<div class="chat-interno-msg ${esPropio ? 'propio' : ''}">
+            <div class="chat-interno-avatar" style="background:${color}">${getInitials(nombre)}</div>
+            <div class="chat-interno-bubble">
+                <div class="chat-interno-autor">${escHtml(nombre)}</div>
+                <div class="chat-interno-texto">${escHtml(m.descripcion)}</div>
+                <div class="chat-interno-fecha">${formatFechaLarga(m.created_at)}</div>
             </div>
         </div>`;
     }).join('');
-
-    // Scroll al final
     container.scrollTop = container.scrollHeight;
 }
 
-async function enviarMensaje() {
-    const input = document.getElementById('chatInput');
-    const texto = input.value.trim();
-
-    if (!texto && archivosChatPendientes.length === 0) return;
+async function enviarMensajeInterno() {
     if (!ticketActual) return;
-
-    let mensajeId = null;
+    const input = document.getElementById('chatInternoInput');
+    const texto = input.value.trim();
+    if (!texto) return;
 
     try {
-        // Enviar mensaje si hay texto
-        if (texto) {
-            const msg = await apiFetch(`/api/v2/tickets/${ticketActual.id}/mensajes`, {
-                method: 'POST',
-                body: JSON.stringify({ mensaje: texto, tipo: tipoMensajeActual })
-            });
-            mensajeId = msg.id;
-        }
-
-        // Subir archivos pendientes
-        if (archivosChatPendientes.length > 0) {
-            const formData = new FormData();
-            archivosChatPendientes.forEach(f => formData.append('files', f));
-            if (mensajeId) formData.append('mensaje_id', mensajeId);
-
-            await fetch(`${API_URL}/api/v2/tickets/${ticketActual.id}/archivos`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${sessionStorage.getItem('hola_token')}` },
-                body: formData
-            });
-        }
-
+        // Guardar como historial tipo nota_interna
+        await supabaseSendNota(ticketActual.id, texto);
         input.value = '';
-        input.style.height = 'auto';
-        archivosChatPendientes = [];
-        document.getElementById('archivosPreview').style.display = 'none';
-        document.getElementById('archivosPreview').innerHTML = '';
 
-        // Recargar ticket completo
+        // Recargar ticket para mostrar la nota
         ticketActual = await apiFetch(`/api/v2/tickets/${ticketActual.id}`);
-        renderChat(ticketActual.ticket_mensajes || []);
-
+        cargarMensajesInternos();
     } catch (err) {
         showToast('Error', err.message, 'error');
     }
 }
 
-function handleChatKeydown(e) {
+// Llamada directa al backend para insertar nota interna en historial
+async function supabaseSendNota(ticketId, texto) {
+    const res = await fetch(`${API_URL}/api/v2/tickets/${ticketId}/notas-internas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('hola_token')}` },
+        body: JSON.stringify({ texto })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al enviar nota');
+    return data;
+}
+
+function handleChatInternoKeydown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        enviarMensaje();
+        enviarMensajeInterno();
     }
-}
-
-function autoResizeTextarea(el) {
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 140) + 'px';
-}
-
-function triggerUploadChat() {
-    document.getElementById('chatArchivoInput').click();
-}
-
-function previewArchivosChat() {
-    const input = document.getElementById('chatArchivoInput');
-    const files = Array.from(input.files);
-    archivosChatPendientes = [...archivosChatPendientes, ...files];
-    input.value = '';
-
-    const preview = document.getElementById('archivosPreview');
-    preview.style.display = 'flex';
-    preview.innerHTML = archivosChatPendientes.map((f, i) => `
-        <div class="preview-chip">
-            <span>${iconoArchivo(f.type)} ${f.name.length > 20 ? f.name.substring(0,18)+'...' : f.name}</span>
-            <button onclick="quitarArchivoChat(${i})"><i class="fas fa-times"></i></button>
-        </div>
-    `).join('');
-}
-
-function quitarArchivoChat(idx) {
-    archivosChatPendientes.splice(idx, 1);
-    if (!archivosChatPendientes.length) {
-        document.getElementById('archivosPreview').style.display = 'none';
-    }
-    previewArchivosChat();
 }
 
 // ============================================
@@ -575,10 +517,7 @@ async function cambiarEstado(nuevoEstado) {
             method: 'PUT',
             body: JSON.stringify({ estado: nuevoEstado })
         });
-        ticketActual.estado = nuevoEstado;
         showToast('Estado actualizado', `Ticket marcado como "${nuevoEstado}"`, 'success');
-
-        // Recargar
         ticketActual = await apiFetch(`/api/v2/tickets/${ticketActual.id}`);
         renderDetalleTicket(ticketActual);
     } catch (err) {
@@ -594,18 +533,6 @@ async function quitarOperario(userId) {
         ticketActual = await apiFetch(`/api/v2/tickets/${ticketActual.id}`);
         renderOperariosDetalle(ticketActual.ticket_asignaciones || []);
         showToast('Operario eliminado', '', 'success');
-    } catch (err) {
-        showToast('Error', err.message, 'error');
-    }
-}
-
-async function eliminarHora(horaId) {
-    if (!confirm('¿Eliminar este registro de horas?')) return;
-    try {
-        await apiFetch(`/api/v2/horas/${horaId}`, { method: 'DELETE' });
-        ticketActual = await apiFetch(`/api/v2/tickets/${ticketActual.id}`);
-        renderHorasDetalle(ticketActual.ticket_horas || []);
-        showToast('Horas eliminadas', '', 'success');
     } catch (err) {
         showToast('Error', err.message, 'error');
     }
@@ -631,8 +558,7 @@ async function eliminarArchivo(archivoId) {
     try {
         await apiFetch(`/api/v2/archivos/${archivoId}`, { method: 'DELETE' });
         ticketActual = await apiFetch(`/api/v2/tickets/${ticketActual.id}`);
-        const archivosSueltos = (ticketActual.ticket_archivos || []).filter(a => !a.mensaje_id);
-        renderArchivosDetalle(archivosSueltos);
+        renderArchivosDetalle(ticketActual.ticket_archivos || []);
         showToast('Archivo eliminado', '', 'success');
     } catch (err) {
         showToast('Error', err.message, 'error');
@@ -661,8 +587,7 @@ async function subirArchivos() {
 
         input.value = '';
         ticketActual = await apiFetch(`/api/v2/tickets/${ticketActual.id}`);
-        const archivosSueltos = (ticketActual.ticket_archivos || []).filter(a => !a.mensaje_id);
-        renderArchivosDetalle(archivosSueltos);
+        renderArchivosDetalle(ticketActual.ticket_archivos || []);
         showToast('Archivos subidos', `${data.length} archivo(s) añadido(s)`, 'success');
     } catch (err) {
         showToast('Error', err.message, 'error');
@@ -738,38 +663,34 @@ async function abrirModalEditarTicketDesdeLista(id) {
 
 function cerrarModalTicket() {
     document.getElementById('ticketModal').style.display = 'none';
-    ticketActual = null;
 }
 
 async function guardarTicket() {
-    const id = document.getElementById('editTicketId').value;
-    const empresa_id = document.getElementById('ticketEmpresa').value;
+    const id           = document.getElementById('editTicketId').value;
+    const empresa_id   = document.getElementById('ticketEmpresa').value;
     const dispositivo_id = document.getElementById('ticketDispositivo').value;
-    const asunto = document.getElementById('ticketAsunto').value.trim();
-    const descripcion = document.getElementById('ticketDescripcion').value.trim();
-    const prioridad = document.getElementById('ticketPrioridad').value;
-    const estado = document.getElementById('ticketEstado').value;
+    const asunto       = document.getElementById('ticketAsunto').value.trim();
+    const descripcion  = document.getElementById('ticketDescripcion').value.trim();
+    const prioridad    = document.getElementById('ticketPrioridad').value;
+    const estado       = document.getElementById('ticketEstado').value;
 
     if (!empresa_id || !asunto) {
         showToast('Error', 'Empresa y asunto son obligatorios', 'error');
         return;
     }
 
-    // Operarios seleccionados
     const operariosSeleccionados = Array.from(
         document.querySelectorAll('#operariosCheckboxes .operario-check-item.checked')
     ).map(el => el.dataset.userId);
 
     try {
         if (id) {
-            // Editar
             await apiFetch(`/api/v2/tickets/${id}`, {
                 method: 'PUT',
                 body: JSON.stringify({ asunto, descripcion, prioridad, estado, dispositivo_id: dispositivo_id || null })
             });
 
-            // Actualizar asignaciones: borrar las actuales y reasignar
-            // (Simplificado: solo añadir nuevas. El backend usa upsert)
+            // Actualizar asignaciones
             if (operariosSeleccionados.length > 0) {
                 await apiFetch(`/api/v2/tickets/${id}/asignaciones`, {
                     method: 'POST',
@@ -778,15 +699,16 @@ async function guardarTicket() {
             }
 
             showToast('Ticket actualizado', '', 'success');
+
+            // Recargar el ticket si está abierto en detalle
+            if (ticketActual && ticketActual.id === id) {
+                ticketActual = await apiFetch(`/api/v2/tickets/${id}`);
+                renderDetalleTicket(ticketActual);
+            }
         } else {
-            // Crear
             await apiFetch('/api/v2/tickets', {
                 method: 'POST',
-                body: JSON.stringify({
-                    empresa_id, dispositivo_id: dispositivo_id || null,
-                    asunto, descripcion, prioridad, estado,
-                    operarios: operariosSeleccionados
-                })
+                body: JSON.stringify({ empresa_id, dispositivo_id: dispositivo_id || null, asunto, descripcion, prioridad, estado, operarios: operariosSeleccionados })
             });
             showToast('Ticket creado', asunto, 'success');
         }
@@ -827,7 +749,6 @@ async function guardarAsignaciones() {
             method: 'POST',
             body: JSON.stringify({ operarios: seleccionados })
         });
-
         ticketActual = await apiFetch(`/api/v2/tickets/${ticketActual.id}`);
         renderOperariosDetalle(ticketActual.ticket_asignaciones || []);
         cerrarModalAsignar();
@@ -839,7 +760,7 @@ async function guardarAsignaciones() {
 
 function renderOperariosCheckboxes(containerId, selectedIds) {
     const container = document.getElementById(containerId);
-    container.innerHTML = operarios.map((op, idx) => {
+    container.innerHTML = operarios.map(op => {
         const color = getAvatarColor(op.id);
         const checked = selectedIds.includes(op.id);
         return `<div class="operario-check-item ${checked ? 'checked' : ''}" data-user-id="${op.id}"
@@ -856,45 +777,6 @@ function toggleOperarioCheck(el) {
     el.classList.toggle('checked');
     const tick = el.querySelector('.operario-check-tick');
     tick.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check"></i>' : '';
-}
-
-// ============================================
-// MODAL: HORAS
-// ============================================
-function abrirModalHoras() {
-    document.getElementById('horasInput').value = '';
-    document.getElementById('horasFecha').valueAsDate = new Date();
-    document.getElementById('horasDescripcion').value = '';
-    document.getElementById('horasModal').style.display = 'flex';
-}
-
-function cerrarModalHoras() {
-    document.getElementById('horasModal').style.display = 'none';
-}
-
-async function guardarHoras() {
-    const horas = parseFloat(document.getElementById('horasInput').value);
-    const fecha = document.getElementById('horasFecha').value;
-    const descripcion = document.getElementById('horasDescripcion').value.trim();
-
-    if (!horas || horas <= 0) {
-        showToast('Error', 'Introduce un número de horas válido', 'error');
-        return;
-    }
-
-    try {
-        await apiFetch(`/api/v2/tickets/${ticketActual.id}/horas`, {
-            method: 'POST',
-            body: JSON.stringify({ horas, fecha, descripcion })
-        });
-
-        ticketActual = await apiFetch(`/api/v2/tickets/${ticketActual.id}`);
-        renderHorasDetalle(ticketActual.ticket_horas || []);
-        cerrarModalHoras();
-        showToast('Horas registradas', `${horas}h añadidas`, 'success');
-    } catch (err) {
-        showToast('Error', err.message, 'error');
-    }
 }
 
 // ============================================
@@ -922,11 +804,8 @@ function limpiarFechas() {
 function escHtml(str) {
     if (!str) return '';
     return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function formatFecha(isoStr) {
@@ -939,6 +818,18 @@ function formatFechaLarga(isoStr) {
     if (!isoStr) return '—';
     const d = new Date(isoStr);
     return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function formatHorasTranscurridas(horas) {
+    if (!horas || horas <= 0) return '< 1h';
+    if (horas < 1) return `${Math.round(horas * 60)}min`;
+    if (horas < 24) return `${horas.toFixed(1)}h`;
+    const dias = Math.floor(horas / 24);
+    const restH = Math.round(horas % 24);
+    if (dias < 30) return restH > 0 ? `${dias}d ${restH}h` : `${dias}d`;
+    const meses = Math.floor(dias / 30);
+    const restD = dias % 30;
+    return restD > 0 ? `${meses}m ${restD}d` : `${meses}m`;
 }
 
 function formatBytes(bytes) {
@@ -971,15 +862,7 @@ function iconoArchivo(mime) {
 }
 
 function historialTipoIcon(tipo) {
-    const icons = {
-        creacion: 'star',
-        estado: 'exchange-alt',
-        asignacion: 'user-plus',
-        desasignacion: 'user-minus',
-        prioridad: 'flag',
-        horas: 'clock',
-        archivo: 'paperclip',
-    };
+    const icons = { creacion: 'star', estado: 'exchange-alt', asignacion: 'user-plus', desasignacion: 'user-minus', prioridad: 'flag', horas: 'clock', archivo: 'paperclip', nota_interna: 'lock' };
     return icons[tipo] || 'circle';
 }
 
@@ -1010,7 +893,6 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Cerrar modales al hacer click fuera
 document.querySelectorAll('.modal').forEach(modal => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.style.display = 'none';

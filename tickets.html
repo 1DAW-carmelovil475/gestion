@@ -20,15 +20,9 @@
         <span class="logo-text">Hola Informática</span>
     </div>
     <nav class="top-nav">
-        <a href="./gestion_usuarios.html" class="nav-link">
-            <i class="fas fa-building"></i> Panel
-        </a>
-        <a href="./tickets.html" class="nav-link active">
-            <i class="fas fa-headset"></i> Tickets
-        </a>
-        <a href="./estadisticas.html" class="nav-link">
-            <i class="fas fa-chart-bar"></i> Estadísticas
-        </a>
+        <a href="./gestion_usuarios.html" class="nav-link"><i class="fas fa-building"></i> Panel</a>
+        <a href="./tickets.html" class="nav-link active"><i class="fas fa-headset"></i> Tickets</a>
+        <a href="./estadisticas.html" class="nav-link" data-admin-only><i class="fas fa-chart-bar"></i> Estadísticas</a>
     </nav>
     <div class="user-area">
         <div class="user-info">
@@ -44,20 +38,13 @@
 
 <!-- BOTTOM NAV MOBILE -->
 <nav class="bottom-nav">
-    <a class="bottom-nav-item" href="./gestion_usuarios.html">
-        <i class="fas fa-building"></i><span>Panel</span>
-    </a>
-    <a class="bottom-nav-item active">
-        <i class="fas fa-headset"></i><span>Tickets</span>
-    </a>
-    <a class="bottom-nav-item" href="./estadisticas.html">
-        <i class="fas fa-chart-bar"></i><span>Stats</span>
-    </a>
+    <a class="bottom-nav-item" href="./gestion_usuarios.html"><i class="fas fa-building"></i><span>Panel</span></a>
+    <a class="bottom-nav-item active"><i class="fas fa-headset"></i><span>Tickets</span></a>
+    <a class="bottom-nav-item" href="./estadisticas.html" data-admin-only><i class="fas fa-chart-bar"></i><span>Stats</span></a>
 </nav>
 
 <!-- MAIN: VISTA LISTA -->
 <main class="main-content" id="vistaLista">
-
     <div class="section-header">
         <div>
             <h1><i class="fas fa-headset"></i> Tickets</h1>
@@ -128,19 +115,14 @@
                 <select id="filtroEmpresa" onchange="cargarTickets()">
                     <option value="all">Empresa</option>
                 </select>
-                <select id="filtroOrden" onchange="cargarTickets()">
-                    <option value="created_at">Más recientes</option>
-                    <option value="prioridad">Prioridad</option>
-                    <option value="empresa">Empresa</option>
-                </select>
             </div>
         </div>
         <div class="filter-row-secondary">
             <div class="date-range">
                 <i class="fas fa-calendar"></i>
-                <input type="date" id="filtroDesde" onchange="cargarTickets()" placeholder="Desde">
+                <input type="date" id="filtroDesde" onchange="cargarTickets()">
                 <span>—</span>
-                <input type="date" id="filtroHasta" onchange="cargarTickets()" placeholder="Hasta">
+                <input type="date" id="filtroHasta" onchange="cargarTickets()">
                 <button class="btn-clear-dates" onclick="limpiarFechas()" title="Limpiar fechas">
                     <i class="fas fa-times"></i>
                 </button>
@@ -149,7 +131,7 @@
         </div>
     </div>
 
-    <!-- TABLA TICKETS DESKTOP -->
+    <!-- TABLA DESKTOP -->
     <div class="table-container desktop-only">
         <table>
             <thead>
@@ -160,7 +142,7 @@
                     <th>Operarios</th>
                     <th>Prioridad</th>
                     <th>Estado</th>
-                    <th>Horas</th>
+                    <th>Tiempo abierto</th>
                     <th>Creado</th>
                     <th style="width:80px">Acciones</th>
                 </tr>
@@ -171,28 +153,25 @@
         </table>
     </div>
 
-    <!-- CARDS TICKETS MOBILE -->
+    <!-- CARDS MOBILE -->
     <div class="cards-list mobile-only" id="ticketsCardsList"></div>
-
 </main>
 
 <!-- ============================================================
-     VISTA DETALLE TICKET (pantalla completa)
+     VISTA DETALLE TICKET
      ============================================================ -->
 <div id="vistaDetalle" class="vista-detalle" style="display:none">
 
-    <!-- Header del ticket -->
+    <!-- Header -->
     <div class="detalle-topbar">
         <button class="btn-back" onclick="volverALista()">
             <i class="fas fa-arrow-left"></i>
             <span>Tickets</span>
         </button>
-
         <div class="detalle-titulo">
             <span class="ticket-numero-badge" id="detalleNumero">#1</span>
             <h2 id="detalleAsunto">Cargando...</h2>
         </div>
-
         <div class="detalle-acciones-top">
             <select id="detalleEstadoSelect" class="estado-select-inline" onchange="cambiarEstado(this.value)">
                 <option value="Pendiente">⏳ Pendiente</option>
@@ -203,25 +182,27 @@
             <button class="btn-action btn-edit" onclick="abrirModalEditarTicket()" title="Editar">
                 <i class="fas fa-edit"></i> <span>Editar</span>
             </button>
+            <!-- BOTÓN CHAT INTERNO -->
+            <button id="btnChatInterno" class="btn-chat-interno" onclick="toggleChatInterno()" title="Notas internas del equipo">
+                <i class="fas fa-lock"></i> <span>Chat interno</span>
+            </button>
             <button class="btn-action btn-delete" id="btnEliminarTicket" onclick="eliminarTicket()" title="Eliminar">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
     </div>
 
-    <!-- Cuerpo del detalle: columna izquierda (info) + columna derecha (chat) -->
+    <!-- Cuerpo: sidebar + notas (bloc) + chat interno flotante -->
     <div class="detalle-body">
 
-        <!-- COLUMNA IZQUIERDA: info + operarios + historial + horas -->
+        <!-- COLUMNA IZQUIERDA: info + operarios + archivos + historial -->
         <aside class="detalle-sidebar">
 
-            <!-- Info básica del ticket -->
             <div class="sidebar-card">
                 <div class="sidebar-card-title"><i class="fas fa-info-circle"></i> Información</div>
                 <div class="info-rows" id="detalleInfoRows"></div>
             </div>
 
-            <!-- Operarios asignados -->
             <div class="sidebar-card">
                 <div class="sidebar-card-title">
                     <span><i class="fas fa-users"></i> Operarios</span>
@@ -230,17 +211,6 @@
                 <div id="detalleOperarios" class="operarios-list"></div>
             </div>
 
-            <!-- Registro de horas -->
-            <div class="sidebar-card">
-                <div class="sidebar-card-title">
-                    <span><i class="fas fa-clock"></i> Horas registradas</span>
-                    <button class="btn-mini" onclick="abrirModalHoras()"><i class="fas fa-plus"></i></button>
-                </div>
-                <div id="detalleHoras" class="horas-list"></div>
-                <div class="horas-total" id="detalleHorasTotal"></div>
-            </div>
-
-            <!-- Archivos adjuntos -->
             <div class="sidebar-card">
                 <div class="sidebar-card-title">
                     <span><i class="fas fa-paperclip"></i> Archivos</span>
@@ -250,7 +220,6 @@
                 <div id="detalleArchivos" class="archivos-list"></div>
             </div>
 
-            <!-- Historial de cambios -->
             <div class="sidebar-card sidebar-card-historial">
                 <div class="sidebar-card-title" onclick="toggleHistorial()" style="cursor:pointer">
                     <span><i class="fas fa-history"></i> Historial</span>
@@ -261,46 +230,54 @@
 
         </aside>
 
-        <!-- COLUMNA DERECHA: chat -->
-        <div class="detalle-chat">
-            <div class="chat-header">
-                <i class="fas fa-comments"></i> Chat del ticket
-                <div class="chat-tipo-toggle">
-                    <button class="chat-tipo-btn active" data-tipo="mensaje" onclick="setTipoMensaje('mensaje')">
-                        Mensaje
-                    </button>
-                    <button class="chat-tipo-btn" data-tipo="nota_interna" onclick="setTipoMensaje('nota_interna')">
-                        <i class="fas fa-lock"></i> Nota interna
-                    </button>
+        <!-- COLUMNA DERECHA: NOTAS como bloc de notas -->
+        <div class="detalle-notas-area">
+            <div class="notas-header">
+                <div style="display:flex;align-items:center;gap:8px">
+                    <i class="fas fa-sticky-note" style="color:var(--primary)"></i>
+                    <span style="font-weight:700;font-size:0.9rem;color:var(--dark)">Notas del ticket</span>
                 </div>
+                <span id="notasIndicador" style="font-size:0.78rem;color:var(--gray);font-style:italic"></span>
             </div>
+            <textarea
+                id="detalleNotas"
+                class="notas-textarea"
+                placeholder="Escribe aquí tus notas sobre este ticket... Se guardan automáticamente."
+                oninput="onNotasChange()"
+            ></textarea>
+        </div>
 
-            <div class="chat-messages" id="chatMessages">
-                <div class="chat-loading"><i class="fas fa-spinner fa-spin"></i> Cargando mensajes...</div>
+    </div>
+
+    <!-- PANEL CHAT INTERNO (lateral derecho, desplegable) -->
+    <div id="chatInternoPanel" class="chat-interno-panel" style="display:none">
+        <div class="chat-interno-header">
+            <div style="display:flex;align-items:center;gap:8px">
+                <i class="fas fa-lock" style="color:#9333ea"></i>
+                <span style="font-weight:700;color:var(--dark)">Chat interno del equipo</span>
             </div>
-
-            <!-- Archivos pendientes de enviar con mensaje -->
-            <div id="archivosPreview" class="archivos-preview" style="display:none"></div>
-
-            <div class="chat-input-area">
-                <button class="chat-attach-btn" onclick="triggerUploadChat()" title="Adjuntar archivo">
-                    <i class="fas fa-paperclip"></i>
-                </button>
-                <input type="file" id="chatArchivoInput" multiple style="display:none" onchange="previewArchivosChat()">
-                <textarea
-                    id="chatInput"
-                    class="chat-input"
-                    placeholder="Escribe un mensaje..."
-                    rows="1"
-                    onkeydown="handleChatKeydown(event)"
-                    oninput="autoResizeTextarea(this)"
-                ></textarea>
-                <button class="chat-send-btn" onclick="enviarMensaje()">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+            <button class="modal-close" onclick="cerrarChatInterno()"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="chatInternoMensajes" class="chat-interno-mensajes">
+            <div style="text-align:center;padding:30px;color:var(--gray);font-size:0.88rem">
+                <i class="fas fa-lock" style="display:block;font-size:1.8rem;opacity:0.3;margin-bottom:8px"></i>
+                Las notas internas son solo visibles para el equipo
             </div>
         </div>
+        <div class="chat-interno-input-area">
+            <textarea
+                id="chatInternoInput"
+                class="chat-input"
+                placeholder="Nota interna (solo visible para el equipo)..."
+                rows="2"
+                onkeydown="handleChatInternoKeydown(event)"
+            ></textarea>
+            <button class="chat-send-btn" onclick="enviarMensajeInterno()" style="background:linear-gradient(135deg,#9333ea,#7e22ce)">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
     </div>
+
 </div>
 
 <!-- ============================================================
@@ -381,36 +358,6 @@
         <div class="modal-buttons">
             <button class="btn-primary" onclick="guardarAsignaciones()"><i class="fas fa-save"></i> Guardar</button>
             <button class="btn-secondary" onclick="cerrarModalAsignar()">Cancelar</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL: Registrar horas -->
-<div class="modal" id="horasModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2><i class="fas fa-clock"></i> Registrar horas</h2>
-            <button class="modal-close" onclick="cerrarModalHoras()"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Horas *</label>
-                    <input type="number" id="horasInput" min="0.25" step="0.25" placeholder="1.5">
-                </div>
-                <div class="form-group">
-                    <label>Fecha</label>
-                    <input type="date" id="horasFecha">
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Descripción del trabajo</label>
-                <textarea id="horasDescripcion" rows="3" placeholder="¿Qué hiciste en este tiempo?"></textarea>
-            </div>
-        </div>
-        <div class="modal-buttons">
-            <button class="btn-primary" onclick="guardarHoras()"><i class="fas fa-save"></i> Registrar</button>
-            <button class="btn-secondary" onclick="cerrarModalHoras()">Cancelar</button>
         </div>
     </div>
 </div>
